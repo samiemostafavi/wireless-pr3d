@@ -4,6 +4,8 @@
 
 ## Purpose
 
+High reliability, mission critical wireless communication in practice
+
 ## Goal
 
 Study the delay distribution specifically tail behaviour in real wireless networks
