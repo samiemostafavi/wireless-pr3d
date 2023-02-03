@@ -16,3 +16,11 @@ Draft deadline: 15 March
   - Wifi: develop routing configurations
   - Batching the measurements
 - Write-up
+
+
+# Until Wednesday Feb 8:
+
+- Test and prepare SDRs (Samie and Rishi)
+- PTP sync on i210 (Samie and Gourav)
+- Prepare a simple demo on training and evaluation (Bix)
+- Talk to Nuria (Samie)
