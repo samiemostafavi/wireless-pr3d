@@ -24,3 +24,4 @@ Draft deadline: 15 March
 - PTP sync on i210 (Samie and Gourav)
 - Prepare a simple demo on training and evaluation (Bix)
 - Talk to Nuria (Samie)
+- Create Overleaf project and GLOBECOM template (Rishi)
