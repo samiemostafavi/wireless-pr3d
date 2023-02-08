@@ -32,5 +32,5 @@ Draft deadline: 15 March
 - Configure the routing for WiFi (Samie)
 - Bringing up SDR 5G (Rishi and Samie)
 - Bringing up SDR LTE: create enodeb and UE containers and test (Rishi and Samie) depending on 5G...
-- Training multiple models (Bix)
+- Training multiple models and prepare the training module (Samie and Bix)
 
