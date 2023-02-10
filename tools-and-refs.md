@@ -23,7 +23,7 @@ COMMANDS
 ```
 
 Refs:
-- ?
+- https://gitlab.eurecom.fr/oai/openairinterface5g/-/blob/develop/doc/NR_SA_CN5G_gNB_USRP_COTS_UE_Tutorial.md
 - ?
 - https://github.com/KTH-EXPECA/oai5g-docker
 
