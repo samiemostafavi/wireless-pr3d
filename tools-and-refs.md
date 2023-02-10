@@ -3,7 +3,29 @@
 
 ## Measurements
 
-SDR 5G: https://github.com/KTH-EXPECA/oai5g-docker
+### SDR 5G
+
+Core network:
+
+```
+COMMANDS
+```
+
+gnodeb:
+
+```
+COMMANDS
+```
+
+nrUE:
+```
+COMMANDS
+```
+
+Refs:
+- ?
+- ?
+- https://github.com/KTH-EXPECA/oai5g-docker
 
 SDR LTE: ?
 
