@@ -5,9 +5,9 @@
 
 ### SDR 5G
 
-#Core network:
+# Core network:
 
-##OAI CN5G pre-requisites:
+## OAI CN5G pre-requisites:
 
 ### 1.1) Install docker-compose if not already installed:
 
@@ -132,9 +132,9 @@ sudo ./nr-softmodem -O ../../../targets/PROJECTS/GENERIC-NR-5GC/CONF/gnb.sa.band
 '''
 
 
-#nrUE:
+# nrUE:
 
-##RUN OAI nrUE
+## RUN OAI nrUE
 
 '''
 cd ~/openairinterface5g
