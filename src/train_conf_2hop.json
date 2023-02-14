@@ -1,0 +1,36 @@
+{
+    "gmm" : {
+        "type": "gmm",
+        "bayesian": false,
+        "ensembles": 1, 
+        "centers": 5,
+        "hidden_sizes": [20, 50, 20],
+        "condition_labels" : ["queue_length_h0", "queue_length_h1", "longer_delay_prob_h0", "longer_delay_prob_h1"],
+        "y_label" : "end2end_delay",
+        "training_params": {
+            "dataset_size": 16000,
+            "batch_size": 1024,
+            "rounds" : [
+                {"learning_rate": 1e-2, "epochs":100},
+                {"learning_rate": 1e-3, "epochs":100}
+            ]
+        }
+    },
+    "gmevm" : {
+        "type":"gmevm",
+        "bayesian":false,
+        "ensembles":1,
+        "centers":4,
+        "hidden_sizes":[20, 50, 20],
+        "condition_labels" : ["queue_length_h0", "queue_length_h1", "longer_delay_prob_h0", "longer_delay_prob_h1"],
+        "y_label" : "end2end_delay",
+        "training_params": {
+            "dataset_size": 16000,
+            "batch_size": 1024,
+            "rounds" : [
+                {"learning_rate": 1e-2, "epochs":100},
+                {"learning_rate": 1e-3, "epochs":100}
+            ]
+        }
+    }
+}
