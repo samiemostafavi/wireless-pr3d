@@ -16,8 +16,9 @@ Install dependencies
         $ pip install -Ur requirements.txt
 
 
-## Training and validation
+### Mixture Models
 
+Compare GMM vs GMEVEM
 
 Validate the dataset
 ```
@@ -44,7 +45,6 @@ Validate onehop model
 ```
 python -m mixturemodels validate_pred -q [0],[4],[6],[8],[10] -d gym_1hop_p2 -w [0.1],[0.5],[0.9] -m train_1hop_p2.gmm,train_1hop_p2.gmevm -l validate_pred_1hop_p2 -r 3 -c 5 -y 0,100,250 -e 1
 ```
-
 
 Plot the results
 ```
