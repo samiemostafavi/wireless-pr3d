@@ -34,3 +34,13 @@ Draft deadline: 15 March
 - Bringing up SDR LTE: create enodeb and UE containers and test (Rishi and Samie) depending on 5G...
 - Training multiple models and prepare the training module (Samie and Bix)
 
+# Until Wednesday Feb 22:
+
+- Getting SNR or MCS or CQI from OAI (Rishi)
+- Getting channel info from WiFi (Samie)
+- Adapt measurment service to get link quality information (Nuria)
+- First measurments on Feb 20 (Monday at 15:30)
+  - SDR 5G measurements service
+  - Create training dataset for Wifi + SDR 5G for a single location
+  - How efficiently do the measurements
+- Training multiple models and prepare the training module (Samie and Bix)
