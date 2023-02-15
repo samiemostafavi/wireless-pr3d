@@ -43,4 +43,4 @@ Draft deadline: 15 March
   - SDR 5G measurements service
   - Create training dataset for Wifi + SDR 5G for a single location
   - How efficiently do the measurements
-- Training multiple models and prepare the training module (Samie and Bix)
+- Training multiple models and prepare the training module (Samie and Bix) Meeting on Thursday Feb. 16
