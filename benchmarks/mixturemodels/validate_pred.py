@@ -26,17 +26,16 @@ def parse_validate_pred_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hq:w:d:m:l:r:c:y:e:",
+            "hd:t:x:m:l:r:c:y:",
             [
-                "qlens=",
-                "ldps=",
                 "dataset=",
+                "target=",
+                "condition-nums=",
                 "models=",
                 "label=",
                 "rows=",
                 "columns=",
-                "y-points=",
-                "ensemble=",
+                "y-points="
             ],
         )
     except getopt.GetoptError:
@@ -51,14 +50,12 @@ def parse_validate_pred_args(argv: list[str]):
                 + "-q <qlens> -d <dataset> -m <trained models> -l <label> -e <ensemble num>",
             )
             sys.exit()
-        elif opt in ("-q", "--qlens"):
-            s = "[" + arg + "]"
-            args_dict["qlens"] = ast.literal_eval(s.strip())
-        elif opt in ("-w", "--ldps"):
-            s = "[" + arg + "]"
-            args_dict["ldps"] = ast.literal_eval(s.strip())
         elif opt in ("-d", "--dataset"):
             args_dict["dataset"] = arg
+        elif opt in ("-t", "--target"):
+            args_dict["target"] = arg
+        elif opt in ("-x", "--condition-nums"):
+            args_dict["condition_nums"] = [int(s.strip()) for s in arg.split(",")]
         elif opt in ("-m", "--models"):
             args_dict["models"] = [s.strip().split(".") for s in arg.split(",")]
         elif opt in ("-l", "--label"):
@@ -69,29 +66,21 @@ def parse_validate_pred_args(argv: list[str]):
             args_dict["columns"] = int(arg)
         elif opt in ("-y", "--y-points"):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
-        elif opt in ("-e", "--ensemble-num"):
-            args_dict["ensemble_num"] = int(arg)
 
     return args_dict
 
+def lookup_df(folder_path, cond_num, spark):
+    json_path = os.path.join(folder_path, f"{cond_num}_conditions.json")
+    with open(json_path, "r") as file:
+        info_json = json.load(file)
 
-def lookup_run_number(folder_path, qlens, ldps):
-    results = []
-    # Get a list of all files in the directory
-    all_files = os.listdir(folder_path)
-    # Filter the list to only include files that match the pattern "*_info.json"
-    for file_name in all_files:
-        if file_name.endswith("_info.json"):
-            file_path = os.path.join(folder_path, file_name)
-            with open(file_path, "r") as file:
-                info_json = json.load(file)
-                if info_json["qlens"] == qlens and info_json["ldps"] == ldps:
-                    results.append(int(file_name.split("_")[0]))
+    parquet_path = os.path.join(folder_path, f"{cond_num}_records.parquet")
+    cond_df = spark.read.parquet(parquet_path)
+    total_count = cond_df.count()
+    logger.info(f"Parquet file {parquet_path} is loaded.")
+    logger.info(f"Total number of samples in this empirical dataset: {total_count}")
 
-    if results == []:
-        logger.error(f"No run with qlens {qlens} and ldps {ldps} found")
-    return results
-
+    return info_json, cond_df
 
 def run_validate_pred_processes(exp_args: list):
     logger.info(
@@ -124,46 +113,27 @@ def run_validate_pred_processes(exp_args: list):
     # dataset project folder setting
     dataset_project_path = main_path + exp_args["dataset"] + "_results/"
 
-    # find runs with the desired qlen and ldp
-    # inputs: exp_args["qlens"] and exp_args["ldps"]
+    # find dataframe with the desired condition
+    # inputs: exp_args["condition_nums"]
     conditions = []
-    for ldps in exp_args["ldps"]:
-        for qlens in exp_args["qlens"]:
-            run_nums = lookup_run_number(dataset_project_path, qlens, ldps)
-            conditions.append(
-                {
-                    "qlens": qlens,
-                    "ldps": ldps,
-                    "run_nums": run_nums,
-                }
-            )
+    cond_dataframes = []
+    for cond_num in exp_args["condition_nums"]:
+        cond_dict, cond_df = lookup_df(dataset_project_path,cond_num,spark)
+        cond_dataframes.append(cond_df)
+        conditions.append(cond_dict)
 
-    # condition_labels = ["queue_length","ldp"]
-    key_label = "end2end_delay"
+    key_label = exp_args["target"]
 
-    # figure 1
+    # figure
     nrows = exp_args["rows"]
     ncols = exp_args["columns"]
     fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
     axes = axes.flat
 
-    for idx, records_dict in enumerate(conditions):
-        ax = axes[idx]
-
-        # open the empirical dataset
-        all_files = os.listdir(dataset_project_path)
-        files = []
-        for f in all_files:
-            if f.endswith(".parquet"):
-                for run_num in records_dict["run_nums"]:
-                    if f.startswith(f"{run_num}_"):
-                        files.append(dataset_project_path + "/" + f)
-
-        cond_df = spark.read.parquet(*files)
+    for idx, cond_dict in enumerate(conditions):
+        logger.info(f"Plotting dataframe {idx} with conditions {cond_dict}")
+        cond_df = cond_dataframes[idx]
         total_count = cond_df.count()
-        logger.info(f"Parquet files {files} are loaded.")
-        logger.info(f"Total number of samples in this empirical dataset: {total_count}")
-
         emp_cdf = list()
         for y in y_points:
             delay_budget = y
@@ -172,52 +142,68 @@ def run_validate_pred_processes(exp_args: list):
             emp_success_prob = success_count / total_count
             emp_cdf.append(emp_success_prob)
 
+        # plot measurements
+        ax = axes[idx]
+        emp_pdf = np.diff(np.array(emp_cdf))
+        emp_pdf = np.append(emp_pdf,[0])
         ax.plot(
             y_points,
-            emp_cdf,
+            emp_pdf,
             marker=".",
-            label="simulation",
+            label="measurements pdf",
         )
 
+        # plot predictions
         for model_list in exp_args["models"]:
             model_project_name = model_list[0]
             model_conf_key = model_list[1]
+            ensemble_num = model_list[2]
             model_path = (
                 main_path + model_project_name + "_results/" + model_conf_key + "/"
             )
 
             with open(
-                model_path + f"model_{exp_args['ensemble_num']}.json"
+                model_path + f"model_{ensemble_num}.json"
             ) as json_file:
                 model_dict = json.load(json_file)
 
             if model_dict["type"] == "gmm":
                 pr_model = ConditionalGaussianMM(
-                    h5_addr=model_path + f"model_{exp_args['ensemble_num']}.h5",
+                    h5_addr=model_path + f"model_{ensemble_num}.h5",
                 )
             elif model_dict["type"] == "gmevm":
                 pr_model = ConditionalGammaMixtureEVM(
-                    h5_addr=model_path + f"model_{exp_args['ensemble_num']}.h5",
+                    h5_addr=model_path + f"model_{ensemble_num}.h5",
                 )
 
+            cond_val_list = []
+            for cond_label in cond_dict:
+                if cond_label in model_dict["condition_labels"]:
+                    if isinstance(cond_dict[cond_label],list):
+                        cond_val_list.append(sum(cond_dict[cond_label]) / 2)
+                    else:
+                        cond_val_list.append(cond_dict[cond_label])
+
             x = np.repeat(
-                [[*records_dict["qlens"], *records_dict["ldps"]]], len(y_points), axis=0
+                [cond_val_list], len(y_points), axis=0
             )
             y = np.array(y_points, dtype=np.float64)
             y = y.clip(min=0.00)
             prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
             ax.plot(
                 y_points,
-                pred_cdf,
+                prob,
                 marker=".",
-                label="prediction " + model_project_name + "." + model_conf_key,
+                label="prediction " + model_project_name + "." + model_conf_key + "." + ensemble_num,
             )
 
-        ax.set_title(f"qlen={records_dict['qlens']},ldps={records_dict['ldps']}")
-        ax.set_xlabel("Delay")
-        ax.set_ylabel("Success probability")
+
+        ax.set_title(f"{cond_dict}")
+        ax.set_xlabel(key_label)
+        ax.set_ylabel("probability")
         ax.grid()
         ax.legend()
-    # figure
+
+    # pdf figure
     fig.tight_layout()
-    fig.savefig(project_path + f"qlen_validation_bulk_{exp_args['ensemble_num']}.png")
+    fig.savefig(project_path + "validate_pred.png")

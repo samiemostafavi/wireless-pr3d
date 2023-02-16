@@ -72,24 +72,6 @@ def parse_prep_dataset_args(argv: list[str]):
     return args_dict
 
 
-def lookup_run_number(folder_path, qlens, ldps):
-    results = []
-    # Get a list of all files in the directory
-    all_files = os.listdir(folder_path)
-    # Filter the list to only include files that match the pattern "*_info.json"
-    for file_name in all_files:
-        if file_name.endswith("_info.json"):
-            file_path = os.path.join(folder_path, file_name)
-            with open(file_path, "r") as file:
-                info_json = json.load(file)
-                if info_json["qlens"] == qlens and info_json["ldps"] == ldps:
-                    results.append(int(file_name.split("_")[0]))
-
-    if results == []:
-        logger.error(f"No run with qlens {qlens} and ldps {ldps} found")
-    return results
-
-
 def run_prep_dataset_processes(exp_args: list):
     logger.info(
         "Prepare models benchmark validate args "
@@ -145,7 +127,6 @@ def run_prep_dataset_processes(exp_args: list):
     os.makedirs(project_path, exist_ok=True)
 
     # create conditional dataframes
-    conditions = []
     empt_dict = { "cond_dataset_num" : None }
     dim_tuple = ()
     for cond_label in exp_args["conditions"]:
@@ -204,8 +185,6 @@ def run_prep_dataset_processes(exp_args: list):
             logger.info(f"No samples were found for conditions {condition_dict}.")
             
 
-    key_label = exp_args["target"]
-
     # CDF figure
     if exp_args["plotcdf"]:
         nrows = exp_args["rows"]
@@ -213,6 +192,7 @@ def run_prep_dataset_processes(exp_args: list):
         cdf_fig, cdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
         cdf_axes = cdf_axes.flat
 
+    # PDF figure
     if exp_args["plotpdf"]:
         nrows = exp_args["rows"]
         ncols = exp_args["columns"]
@@ -220,6 +200,7 @@ def run_prep_dataset_processes(exp_args: list):
         pdf_axes = pdf_axes.flat
 
     if exp_args["plotpdf"] or exp_args["plotcdf"]:
+        key_label = exp_args["target"]
         for idx, cond_dict in enumerate(conditions):
             logger.info(f"Plotting dataframe {idx} with conditions {cond_dict}")
             cond_df = cond_dataframes[idx]
@@ -260,7 +241,7 @@ def run_prep_dataset_processes(exp_args: list):
 
                 ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
-                ax.set_ylabel("Success probability")
+                ax.set_ylabel("probability")
                 ax.grid()
                 ax.legend()
 
