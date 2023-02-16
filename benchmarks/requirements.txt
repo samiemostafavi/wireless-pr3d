@@ -1,0 +1,14 @@
+git+https://github.com/samiemostafavi/pr3d.git
+numpy
+matplotlib
+loguru
+seaborn
+polars
+SciencePlots
+pre-commit
+black
+flake8
+isort
+codespell
+scipy
+petastorm

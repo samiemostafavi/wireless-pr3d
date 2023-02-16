@@ -8,45 +8,42 @@
 
 Create a Python 3.9 virtual environment using `virtualenv`
 
-        $ python -m virtualenv --python=python3.9 ./venv
-        $ source venv/bin/activate
+```
+cd benchmarks
+python -m virtualenv --python=python3.9 ./venv
+source venv/bin/activate
+```
 
 Install dependencies
 
-        $ pip install -Ur requirements.txt
-
+```
+pip install -Ur requirements.txt
+```
 
 ### Mixture Models
 
-Compare GMM vs GMEVEM
-
-Validate the dataset
+Open all the `parquet` files and show a preview of them:
 ```
-python -m mixturemodels validate_gym -q [0,2],[4,4],[6,6],[0,10],[8,10] -d gym_2hop_p2 -w [0.1,0.1],[0.1,0.9],[0.9,0.9] -l validate_gym_2hop_p2 -r 3 -c 5 -y 0,100,250
-python -m mixturemodels validate_gym -q [0],[4],[6],[8],[10] -d gym_1hop_p2 -w [0.1],[0.5],[0.9] -l validate_gym_1hop_p2 -r 3 -c 5 -y 0,100,250
+python -m mixturemodels prep_dataset -d ep5g --preview
 ```
 
-Train multihop models
+Prepare the dataset by the conditions defined in json format with `-x` argument. Plot the pdf and cdf if you want.
 ```
-python -m mixturemodels train -d gym_2hop_p2 -l train_2hop_p2 -c multihop_benchmark/train_conf_2hop.json -e 10
+python -m mixturemodels prep_dataset -d ep5g -t rtt -x '{"X":[1,2],"Y":[1,2,3],"RSRP":[[-75.0,-58.0]]}' -l prepped_ep5g -r 1 -c 3 -y 8536766,1000,30452346 --plot-cdf --plot-pdf
 ```
 
-Validate multihop models
+Train models
+```
+python -m mixturemodels train -d prepped_ep5g -l trained_ep5g -c mixturemodels/train_conf.json -e 10
+```
+
+
+Validate the models (NOT TESTED)
 ```
 python -m mixturemodels validate_pred -q [0,2],[4,4],[6,6],[0,10],[8,10] -d gym_2hop_p2 -w [0.1,0.1],[0.1,0.9],[0.9,0.9] -m train_2hop_p2.gmm,train_2hop_p2.gmevm -l validate_pred_2hop_p2 -r 3 -c 5 -y 0,100,250 -e 1
 ```
 
-Train onehop model
-```
-python -m mixturemodels train -d gym_1hop_p2 -l train_1hop_p2 -c multihop_benchmark/train_conf_1hop.json -e 10
-```
-
-Validate onehop model
-```
-python -m mixturemodels validate_pred -q [0],[4],[6],[8],[10] -d gym_1hop_p2 -w [0.1],[0.5],[0.9] -m train_1hop_p2.gmm,train_1hop_p2.gmevm -l validate_pred_1hop_p2 -r 3 -c 5 -y 0,100,250 -e 1
-```
-
-Plot the results
+Plot the results (NOT IMPLEMENTED)
 ```
 ```
 

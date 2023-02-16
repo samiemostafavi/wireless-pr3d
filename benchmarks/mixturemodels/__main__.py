@@ -12,7 +12,7 @@ from loguru import logger
 
 from .plot import parse_plot_args, plot_main
 from .train import parse_train_args, run_train_processes
-from .validate_gym import parse_validate_gym_args, run_validate_gym_processes
+from .prep_dataset import parse_prep_dataset_args, run_prep_dataset_processes
 from .validate_pred import parse_validate_pred_args, run_validate_pred_processes
 
 # very important line to make tensorflow run in sub processes
@@ -24,9 +24,9 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 if __name__ == "__main__":
 
     argv = sys.argv[1:]
-    if argv[0] == "validate_gym":
-        validate_gym_args = parse_validate_gym_args(argv[1:])
-        run_validate_gym_processes(validate_gym_args)
+    if argv[0] == "prep_dataset":
+        validate_gym_args = parse_prep_dataset_args(argv[1:])
+        run_prep_dataset_processes(validate_gym_args)
     elif argv[0] == "train":
         train_args = parse_train_args(argv[1:])
         run_train_processes(train_args)

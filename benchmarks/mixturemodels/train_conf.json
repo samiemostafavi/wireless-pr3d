@@ -2,11 +2,10 @@
     "gmm" : {
         "type": "gmm",
         "bayesian": false,
-        "ensembles": 1, 
         "centers": 5,
         "hidden_sizes": [20, 50, 20],
-        "condition_labels" : ["queue_length_h0", "queue_length_h1", "longer_delay_prob_h0", "longer_delay_prob_h1"],
-        "y_label" : "end2end_delay",
+        "condition_labels" : ["X", "Y"],
+        "y_label" : "rtt",
         "training_params": {
             "dataset_size": 16000,
             "batch_size": 1024,
@@ -19,11 +18,10 @@
     "gmevm" : {
         "type":"gmevm",
         "bayesian":false,
-        "ensembles":1,
         "centers":4,
         "hidden_sizes":[20, 50, 20],
-        "condition_labels" : ["queue_length_h0", "queue_length_h1", "longer_delay_prob_h0", "longer_delay_prob_h1"],
-        "y_label" : "end2end_delay",
+        "condition_labels" : ["X", "Y"],
+        "y_label" : "rtt",
         "training_params": {
             "dataset_size": 16000,
             "batch_size": 1024,

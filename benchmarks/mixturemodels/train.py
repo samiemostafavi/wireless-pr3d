@@ -118,7 +118,7 @@ def run_train_processes(exp_args: list):
         logger.info(f"Starting {n_runs} jobs")
         res = pool.map_async(train_model, params_list)
         logger.info("Waiting for results")
-        res.get(100)  # Without the timeout this blocking call ignores all signals.
+        res.get(1000)  # Without the timeout this blocking call ignores all signals.
     except KeyboardInterrupt:
         logger.info("Caught KeyboardInterrupt, terminating workers")
         pool.terminate()
@@ -151,16 +151,14 @@ def load_dataset_and_sample(params):
         f"load_dataset_and_sample: Spark cache folder is set up at: {spark_cash_addr}"
     )
 
-    # find records_paths
-    records_path = params["dataset_path"]
 
     # read all the files from the project
     files = []
-    logger.info(f"Opening the path '{records_path}'")
-    all_files = os.listdir(records_path)
+    logger.info(f"Opening the path {params['dataset_path']}")
+    all_files = os.listdir(params["dataset_path"])
     for f in all_files:
         if f.endswith(".parquet"):
-            files.append(records_path + "/" + f)
+            files.append(params["dataset_path"] + "/" + f)
 
     # read all files into one Spark df
     main_df = spark.read.parquet(*files)
