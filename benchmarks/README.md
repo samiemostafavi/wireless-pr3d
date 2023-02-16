@@ -27,7 +27,12 @@ Open all the `parquet` files and show a preview of them:
 python -m mixturemodels prep_dataset -d ep5g --preview
 ```
 
-Prepare the dataset by the conditions defined in json format with `-x` argument. Plot the pdf and cdf if you want.
+Prepare the dataset by the conditions defined in json format with `-x` argument.
+```
+python -m mixturemodels prep_dataset -d ep5g -t rtt -x '{"X":[1,2],"Y":[1,2,3],"RSRP":[[-75.0,-58.0]]}' -l prepped_ep5g
+```
+
+Prepare the dataset by the conditions defined in json format with `-x` argument and plot the pdf and cdf for each dataframe.
 ```
 python -m mixturemodels prep_dataset -d ep5g -t rtt -x '{"X":[1,2],"Y":[1,2,3],"RSRP":[[-75.0,-58.0]]}' -l prepped_ep5g -r 1 -c 3 -y 8536766,1000,30452346 --plot-cdf --plot-pdf
 ```

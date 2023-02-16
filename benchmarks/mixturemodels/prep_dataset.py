@@ -207,13 +207,15 @@ def run_prep_dataset_processes(exp_args: list):
     key_label = exp_args["target"]
 
     # CDF figure
-    nrows = exp_args["rows"]
-    ncols = exp_args["columns"]
     if exp_args["plotcdf"]:
+        nrows = exp_args["rows"]
+        ncols = exp_args["columns"]
         cdf_fig, cdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
         cdf_axes = cdf_axes.flat
 
     if exp_args["plotpdf"]:
+        nrows = exp_args["rows"]
+        ncols = exp_args["columns"]
         pdf_fig, pdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
         pdf_axes = pdf_axes.flat
 
