@@ -145,7 +145,7 @@ def run_validate_pred_processes(exp_args: list):
         # plot measurements
         ax = axes[idx]
         emp_pdf = np.diff(np.array(emp_cdf))
-        emp_pdf = np.append(emp_pdf,[0])
+        emp_pdf = np.append(emp_pdf,[0])*exp_args["y_points"][1]/(exp_args["y_points"][2]-exp_args["y_points"][0])
         ax.plot(
             y_points,
             emp_pdf,
