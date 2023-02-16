@@ -27,8 +27,8 @@ def parse_prep_dataset_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:t:x:l:r:c:y:f:p:w",
-            ["dataset=", "target=", "conditions=", "label=", "rows=", "columns=", "y-points=", "plot-pdf", "plot-cdf","preview"],
+            "hd:t:x:l:r:c:y:n:f:p:w",
+            ["dataset=", "target=", "conditions=", "label=", "rows=", "columns=", "y-points=", "normalize=", "plot-pdf", "plot-cdf","preview"],
         )
     except getopt.GetoptError:
         print('Wrong args, type "python -m models_benchmark validate -h" for help')
@@ -39,6 +39,7 @@ def parse_prep_dataset_args(argv: list[str]):
     args_dict["plotcdf"] = False
     args_dict["plotpdf"] = False
     args_dict["preview"] = False
+    args_dict["normalize"] = False
 
     # parse the args
     for opt, arg in opts:
@@ -62,6 +63,8 @@ def parse_prep_dataset_args(argv: list[str]):
             args_dict["columns"] = int(arg)
         elif opt in ("-y", "--y-points"):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
+        elif opt in ("-n", "--normalize"):
+            args_dict["normalize"] = [s.strip() for s in arg.split(",")]
         elif opt in ("-f", "--plot-cdf"):
             args_dict["plotcdf"] = True
         elif opt in ("-p", "--plot-pdf"):
@@ -121,6 +124,33 @@ def run_prep_dataset_processes(exp_args: list):
 
     if exp_args["preview"]:
         return
+
+
+    if exp_args["normalize"]:
+        from pyspark.ml.feature import MinMaxScaler
+        from pyspark.ml.feature import VectorAssembler
+        from pyspark.ml import Pipeline
+        from pyspark.sql.functions import udf
+        from pyspark.sql.types import DoubleType
+
+        # UDF for converting column type from vector to double type
+        unlist = udf(lambda x: round(float(list(x)[0]),3), DoubleType())
+
+        # Iterating over columns to be scaled
+        for i in exp_args["normalize"]:
+            # VectorAssembler Transformation - Converting column to vector type
+            assembler = VectorAssembler(inputCols=[i],outputCol=i+"_vect")
+
+            # MinMaxScaler Transformation
+            scaler = MinMaxScaler(inputCol=i+"_vect", outputCol=i+"_scaled")
+
+            # Pipeline of VectorAssembler and MinMaxScaler
+            pipeline = Pipeline(stages=[assembler, scaler])
+
+            # Fitting pipeline on dataframe
+            df = pipeline.fit(df).transform(df).withColumn(i+"_scaled", unlist(i+"_scaled")).drop(i+"_vect")
+            logger.info("Dataset after normalization:")
+            df.summary().show()
 
     # this project folder setting
     project_path = main_path + exp_args["label"] + "_results/"
