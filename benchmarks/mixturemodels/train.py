@@ -290,7 +290,7 @@ def train_model(params):
             y=Ynp,
             steps_per_epoch=steps_per_epoch,
             epochs=round_params["epochs"],
-            verbose=0,
+            verbose=1,
         )
 
     # training done, save the model

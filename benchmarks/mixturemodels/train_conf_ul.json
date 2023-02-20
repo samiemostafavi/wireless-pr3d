@@ -1,0 +1,19 @@
+{
+    "gmm" : {
+        "type": "gmm",
+        "bayesian": false,
+        "centers": 4,
+        "hidden_sizes": [10, 50, 50, 40],
+        "condition_labels" : ["X", "Y"],
+        "y_label" : "send_scaled",
+        "training_params": {
+            "dataset_size": 16000,
+            "batch_size": 8196,
+            "rounds" : [
+                {"learning_rate": 1e-3, "epochs":500},
+                {"learning_rate": 1e-4, "epochs":500},
+                {"learning_rate": 1e-5, "epochs":500}
+            ]
+        }
+    }
+}
