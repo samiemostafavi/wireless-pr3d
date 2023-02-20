@@ -1,4 +1,4 @@
-# Evaluation Notes
+# Training Notes
 
 Fitting the Gaussian mixture model to the delay distribution of a time-slotted wireless network needs care.
 
