@@ -58,6 +58,8 @@ SDR='sdr-02' SIDE='sta' JSON_PATH='sdrs.json' CONFIG='{"protocol":"udp","client"
 
 # Check WiFi link quality
 
+NOTE: for every measurement be careful of the file names so you don't overwrite them.
+
 Finarfin (AP):
 ```
 SDR='sdr-01' SIDE='ap' JSON_PATH='./sdrs.json' OUTPUT_PATH='/tmp/ap_link.json' SPEED_CHECK='192.168.11.10' python check_mango/check_mango.py
@@ -72,6 +74,8 @@ scp finarfin://tmp/ap_link.json /home/wlab/irtt_data/wifi/
 ```
 
 # Start IRTT
+
+NOTE: for every measurement be careful of the file names so you don't overwrite them.
 
 Finarfin (AP):
 ```
