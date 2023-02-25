@@ -60,12 +60,12 @@ SDR='sdr-02' SIDE='sta' JSON_PATH='sdrs.json' CONFIG='{"protocol":"udp","client"
 
 Finarfin (AP):
 ```
-SDR='sdr-01' SIDE='ap' JSON_PATH='./sdrs.json' OUTPUT_PATH='./tmp/ap_link.json' SPEED_CHECK='192.168.11.10' python check_mango/check_mango.py
+SDR='sdr-01' SIDE='ap' JSON_PATH='./sdrs.json' OUTPUT_PATH='/tmp/ap_link.json' SPEED_CHECK='192.168.11.10' python check_mango/check_mango.py
 ```
 
 Fingolfin (STA):
 ```
-SDR='sdr-02' SIDE='sta' JSON_PATH='./sdrs.json' OUTPUT_PATH='./home/wlab/irtt_data/wifi/sta_link.json' SPEED_CHECK='192.168.11.1' python check_mango/check_mango.py
+SDR='sdr-02' SIDE='sta' JSON_PATH='./sdrs.json' OUTPUT_PATH='/home/wlab/irtt_data/wifi/sta_link.json' SPEED_CHECK='192.168.11.1' python check_mango/check_mango.py
 ```
 ```
 scp finarfin://tmp/ap_link.json /home/wlab/irtt_data/wifi/
