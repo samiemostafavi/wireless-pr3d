@@ -88,7 +88,7 @@ Fingolfin (STA):
 irtt client -i 10ms -d 100s -l 172 -o /home/wlab/irtt_data/wifi/rtts_0.json --fill=rand 10.30.1.3:50000 --local=0.0.0.0:50000
 ```
 
-# 8) Collect the result file
+# 8) Collect the result files
 
 Fingolfin (STA):
 ```
