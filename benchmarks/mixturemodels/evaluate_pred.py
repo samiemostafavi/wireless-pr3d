@@ -5,6 +5,7 @@ import multiprocessing as mp
 import os
 import sys
 import time
+import re
 import warnings
 from os.path import abspath, dirname
 from pathlib import Path
@@ -162,49 +163,56 @@ def run_evaluate_pred_processes(exp_args: list):
         emp_tail = np.log10(np.float64(1.00)-np.array(emp_cdf,dtype=np.float64))
         
         res_df = pd.DataFrame()
-        res_df["y"] = y_points_standard
-        res_df["tail.emp"] = emp_tail
+        res_df["y"] = y_points
+        res_df["tail.measurements"] = emp_tail
 
         # predictions
         for model_list in exp_args["models"]:
             
             model_project_name = model_list[0]
             model_conf_key = model_list[1]
-            ensemble_num = model_list[2]
             model_path = (
                 main_path + model_project_name + "_results/" + model_conf_key + "/"
             )
 
-            with open(
-                model_path + f"model_{ensemble_num}.json"
-            ) as json_file:
-                model_dict = json.load(json_file)
+            ensemble_nums = []
+            for file in os.listdir(model_path):
+                if file.startswith("model_") and file.endswith(".json"):
+                    number = re.search(r"\d+", file).group()
+                    ensemble_nums.append(number)
 
-            if model_dict["type"] == "gmm":
-                pr_model = ConditionalGaussianMM(
-                    h5_addr=model_path + f"model_{ensemble_num}.h5",
+            for ensemble_num in ensemble_nums:
+
+                with open(
+                    model_path + f"model_{ensemble_num}.json"
+                ) as json_file:
+                    model_dict = json.load(json_file)
+
+                if model_dict["type"] == "gmm":
+                    pr_model = ConditionalGaussianMM(
+                        h5_addr=model_path + f"model_{ensemble_num}.h5",
+                    )
+                elif model_dict["type"] == "gmevm":
+                    pr_model = ConditionalGaussianMixtureEVM(
+                        h5_addr=model_path + f"model_{ensemble_num}.h5",
+                    )
+
+                cond_val_list = []
+                for cond_label in cond_dict:
+                    if cond_label in model_dict["condition_labels"]:
+                        if isinstance(cond_dict[cond_label],list):
+                            cond_val_list.append(sum(cond_dict[cond_label]) / 2)
+                        else:
+                            cond_val_list.append(cond_dict[cond_label])
+
+                x = np.repeat(
+                    [cond_val_list], len(y_points_standard), axis=0
                 )
-            elif model_dict["type"] == "gmevm":
-                pr_model = ConditionalGaussianMixtureEVM(
-                    h5_addr=model_path + f"model_{ensemble_num}.h5",
-                )
+                y = np.array(y_points_standard, dtype=np.float64)
+                #y = y.clip(min=0.00)
+                prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
+                pred_tail = np.log10(np.float64(1.00)-np.array(pred_cdf,dtype=np.float64))
 
-            cond_val_list = []
-            for cond_label in cond_dict:
-                if cond_label in model_dict["condition_labels"]:
-                    if isinstance(cond_dict[cond_label],list):
-                        cond_val_list.append(sum(cond_dict[cond_label]) / 2)
-                    else:
-                        cond_val_list.append(cond_dict[cond_label])
-
-            x = np.repeat(
-                [cond_val_list], len(y_points_standard), axis=0
-            )
-            y = np.array(y_points_standard, dtype=np.float64)
-            #y = y.clip(min=0.00)
-            prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
-            pred_tail = np.log10(np.float64(1.00)-np.array(pred_cdf,dtype=np.float64))
-
-            res_df[f"tail.{model_conf_key}.{ensemble_num}"]=pred_tail
+                res_df[f"tail.{model_conf_key}.{ensemble_num}"]=pred_tail
             
         res_df.to_csv(project_path+f"{idx}.csv",index=False)

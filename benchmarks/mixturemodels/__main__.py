@@ -10,7 +10,7 @@ from pathlib import Path
 import numpy as np
 from loguru import logger
 
-from .plot import parse_plot_args, plot_main
+from .plot_evaluation import parse_plot_evaluation_args, plot_evaluation_main
 from .train import parse_train_args, run_train_processes
 from .prep_dataset import parse_prep_dataset_args, run_prep_dataset_processes
 from .validate_pred import parse_validate_pred_args, run_validate_pred_processes
@@ -41,8 +41,8 @@ if __name__ == "__main__":
     elif argv[0] == "evaluate_pred":
         train_args = parse_evaluate_pred_args(argv[1:])
         run_evaluate_pred_processes(train_args)
-    elif argv[0] == "plot":
-        plot_args = parse_plot_args(argv[1:])
-        plot_main(plot_args)
+    elif argv[0] == "plot_evaluation":
+        plot_args = parse_plot_evaluation_args(argv[1:])
+        plot_evaluation_main(plot_args)
     else:
         raise Exception("wrong command line option")

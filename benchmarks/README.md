@@ -62,18 +62,16 @@ python -m mixturemodels train -d prepped_ep5glong_loc -l trained_ep5glong_loc_se
 Validate the trained models
 ```
 python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf -r 1 -c 3 -y 0,400,25
-python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf --log -r 1 -c 3 -y -5,600,20
-python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-tail --loglog -r 1 -c 3 -y -5,600,30
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf --log -r 1 -c 3 -y 0,400,25
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-tail --loglog -r 1 -c 3 -y 0,400,25
 ```
 
-Run evaluation
+Run evaluation and plot the results
 ```
-python -m mixturemodels evaluate_pred -d prepped_ep5glong_loc_norm -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0,trained_ep5glong_loc_send.gmevm.0 -l evaluate_pred_ep5glong_loc -y -5,600,30
+python -m mixturemodels evaluate_pred -d prepped_ep5glong_loc_norm -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm,trained_ep5glong_loc_send.gmevm -l evaluate_pred_ep5glong_loc -y 0,300,25
+python -m mixturemodels plot_evaluation -p evaluate_pred_ep5glong_loc -m gmm,gmevm -x 0,1,2 -y 0,25
 ```
 
-Plot the results
-```
-```
 
 ## Time Series
 
