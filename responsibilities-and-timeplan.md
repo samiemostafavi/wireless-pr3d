@@ -44,3 +44,16 @@ Draft deadline: 15 March
   - Create training dataset for Wifi + SDR 5G for a single location
   - How efficiently do the measurements
 - Training multiple models and prepare the training module (Samie and Bix) Meeting on Thursday Feb. 16
+
+# Until Wednesday March 1:
+
+- First measurements on Friday 24th at 10 am
+  - 5G core network routing issue (Samie)
+  - Checking RSPR values on 5G UE logs (Rishi)
+  - Data process script (Nuria)
+- Fix a server for Bix and Gourav
+- Meeting on Monday 27th (Samie - Bix - Gourav) evaluation and training
+- Populate the Overleaf document (Samie and Gourav)
+
+
+
