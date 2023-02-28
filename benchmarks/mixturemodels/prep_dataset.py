@@ -27,8 +27,8 @@ def parse_prep_dataset_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:t:x:l:r:c:y:n:f:p:w",
-            ["dataset=", "target=", "conditions=", "label=", "rows=", "columns=", "y-points=", "normalize=", "plot-pdf", "plot-cdf","preview"],
+            "hd:t:x:l:r:c:y:n:f:p:g:w",
+            ["dataset=", "target=", "conditions=", "label=", "rows=", "columns=", "y-points=", "normalize=", "plot-pdf", "plot-cdf", "log","preview"],
         )
     except getopt.GetoptError:
         print('Wrong args, type "python -m models_benchmark validate -h" for help')
@@ -38,8 +38,9 @@ def parse_prep_dataset_args(argv: list[str]):
     args_dict["y_points"] = [0, 100, 400]
     args_dict["plotcdf"] = False
     args_dict["plotpdf"] = False
+    args_dict["logplot"] = False
     args_dict["preview"] = False
-    args_dict["normalize"] = False
+    args_dict["normalize"] = None
 
     # parse the args
     for opt, arg in opts:
@@ -69,6 +70,8 @@ def parse_prep_dataset_args(argv: list[str]):
             args_dict["plotcdf"] = True
         elif opt in ("-p", "--plot-pdf"):
             args_dict["plotpdf"] = True
+        elif opt in ("-g", "--log"):
+            args_dict["logplot"] = True
         elif opt in ("-w", "--preview"):
             args_dict["preview"] = True
 
@@ -120,11 +123,43 @@ def run_prep_dataset_processes(exp_args: list):
     #Get All column names and it's types
     logger.info("Dataset preview:")
     df.printSchema()
-    df.summary().show()
-
+    
     if exp_args["preview"]:
+        df.summary().show()
         return
 
+    #if exp_args["scale"]:
+    from pyspark.sql.functions import col, mean
+
+    send_mean = df.select(mean('send')).collect()[0][0]
+    send_scale = 1e-6
+    df = df.withColumn('send_scaled', (col('send') * send_scale))
+    df = df.withColumn('send_standard', ((col('send')-send_mean) * send_scale))
+
+    receive_mean = df.select(mean('receive')).collect()[0][0]
+    receive_scale = 1e-6
+    df = df.withColumn('receive_scaled', (col('receive') * receive_scale))
+    df = df.withColumn('receive_standard', ((col('receive')-receive_mean) * receive_scale))
+
+    rtt_mean = df.select(mean('rtt')).collect()[0][0]
+    rtt_scale = 1e-6
+    df = df.withColumn('rtt_scaled', (col('rtt') * rtt_scale))
+    df = df.withColumn('rtt_standard', ((col('rtt')-rtt_mean) * rtt_scale))
+
+    means_dict = {
+        "send":{
+            "mean":send_mean,
+            "scale":send_scale
+        },
+        "receive":{
+            "mean":receive_mean,
+            "scale":receive_scale
+        },
+        "rtt":{
+            "mean":rtt_mean,
+            "scale":rtt_scale
+        }
+    }
 
     if exp_args["normalize"]:
         from pyspark.ml.feature import MinMaxScaler
@@ -142,19 +177,30 @@ def run_prep_dataset_processes(exp_args: list):
             assembler = VectorAssembler(inputCols=[i],outputCol=i+"_vect")
 
             # MinMaxScaler Transformation
-            scaler = MinMaxScaler(inputCol=i+"_vect", outputCol=i+"_scaled")
+            scaler = MinMaxScaler(inputCol=i+"_vect", outputCol=i+"_normed")
 
             # Pipeline of VectorAssembler and MinMaxScaler
             pipeline = Pipeline(stages=[assembler, scaler])
 
             # Fitting pipeline on dataframe
-            df = pipeline.fit(df).transform(df).withColumn(i+"_scaled", unlist(i+"_scaled")).drop(i+"_vect")
+            df = pipeline.fit(df).transform(df).withColumn(i+"_normed", unlist(i+"_normed")).drop(i+"_vect")
             logger.info("Dataset after normalization:")
             df.summary().show()
+
+    logger.info("Dataset preview after scales and normalizations:")
+    #df.summary().show()
 
     # this project folder setting
     project_path = main_path + exp_args["label"] + "_results/"
     os.makedirs(project_path, exist_ok=True)
+
+    # save json file
+    with open(
+        project_path + f"info.json",
+        "w",
+        encoding="utf-8",
+    ) as f:
+        f.write(json.dumps(means_dict, indent = 4))
 
     # create conditional dataframes
     empt_dict = { "cond_dataset_num" : None }
@@ -191,9 +237,9 @@ def run_prep_dataset_processes(exp_args: list):
 
         if cond_df.count():
             # append the conditional df to the list
-            logger.info(f"Dataframe {len(cond_dataframes)} for conditions {condition_dict} has {cond_df.count()} samples with the following preview:")
-            cond_df.summary().show()
-        
+            logger.info(f"Dataframe {len(cond_dataframes)} for conditions {condition_dict} has {cond_df.count()} samples.")
+            #cond_df.summary().show()
+
             # save json file
             with open(
                 project_path + f"{len(cond_dataframes)}_conditions.json",
@@ -213,74 +259,3 @@ def run_prep_dataset_processes(exp_args: list):
             conditions.append(condition_dict)
         else:
             logger.info(f"No samples were found for conditions {condition_dict}.")
-            
-
-    # CDF figure
-    if exp_args["plotcdf"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        cdf_fig, cdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        cdf_axes = cdf_axes.flat
-
-    # PDF figure
-    if exp_args["plotpdf"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        pdf_fig, pdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        pdf_axes = pdf_axes.flat
-
-    if exp_args["plotpdf"] or exp_args["plotcdf"]:
-        key_label = exp_args["target"]
-        for idx, cond_dict in enumerate(conditions):
-            logger.info(f"Plotting dataframe {idx} with conditions {cond_dict}")
-            cond_df = cond_dataframes[idx]
-            total_count = cond_df.count()
-            emp_cdf = list()
-            for y in y_points:
-                delay_budget = y
-                new_cond_df = cond_df.where(cond_df[key_label] <= delay_budget)
-                success_count = new_cond_df.count()
-                emp_success_prob = success_count / total_count
-                emp_cdf.append(emp_success_prob)
-
-            if exp_args["plotcdf"]:
-                ax = cdf_axes[idx]
-                ax.plot(
-                    y_points,
-                    emp_cdf,
-                    marker=".",
-                    label="cdf",
-                )
-
-                ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
-                ax.set_ylabel("Success probability")
-                ax.grid()
-                ax.legend()
-
-            if exp_args["plotpdf"]:
-                ax = pdf_axes[idx]
-                emp_pdf = np.diff(np.array(emp_cdf))
-                emp_pdf = np.append(emp_pdf,[0])
-                ax.plot(
-                    y_points,
-                    emp_pdf,
-                    marker=".",
-                    label="pdf",
-                )
-
-                ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
-                ax.set_ylabel("probability")
-                ax.grid()
-                ax.legend()
-
-        if exp_args["plotcdf"]:
-            # cdf figure
-            cdf_fig.tight_layout()
-            cdf_fig.savefig(project_path + "prepped_dataset_cdf.png")
-
-        if exp_args["plotpdf"]:
-            # pdf figure
-            pdf_fig.tight_layout()
-            pdf_fig.savefig(project_path + "prepped_dataset_pdf.png")

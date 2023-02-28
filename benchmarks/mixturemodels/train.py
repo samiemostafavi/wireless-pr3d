@@ -192,9 +192,10 @@ def load_dataset_and_sample(params):
 def train_model(params):
 
     import tensorflow as tf
+    import tensorflow_addons as tfa
     from petastorm import TransformSpec
     from petastorm.spark import SparkDatasetConverter, make_spark_converter
-    from pr3d.de import ConditionalGammaMixtureEVM, ConditionalGaussianMM
+    from pr3d.de import ConditionalGaussianMixtureEVM, ConditionalGaussianMM
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import rand
 
@@ -250,7 +251,7 @@ def train_model(params):
             # batch_size = 1024,
         )
     elif model_type == "gmevm":
-        model = ConditionalGammaMixtureEVM(
+        model = ConditionalGaussianMixtureEVM(
             x_dim=condition_labels,
             centers=model_conf["centers"],
             hidden_sizes=model_conf["hidden_sizes"],
@@ -274,7 +275,7 @@ def train_model(params):
 
         model.training_model.compile(
             optimizer=tf.keras.optimizers.Adam(
-                learning_rate=round_params["learning_rate"]
+                learning_rate=round_params["learning_rate"],
             ),
             loss=model.loss,
         )

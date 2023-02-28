@@ -11,7 +11,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import polars as pl
+import pandas as pd
 from loguru import logger
 from pr3d.de import ConditionalGaussianMixtureEVM, ConditionalGaussianMM
 from pyspark.sql import SparkSession
@@ -19,7 +19,7 @@ from pyspark.sql import SparkSession
 warnings.filterwarnings("ignore")
 
 
-def parse_validate_pred_args(argv: list[str]):
+def parse_evaluate_pred_args(argv: list[str]):
 
     # parse arguments to a dict
     args_dict = {}
@@ -73,22 +73,8 @@ def parse_validate_pred_args(argv: list[str]):
             args_dict["models"] = [s.strip().split(".") for s in arg.split(",")]
         elif opt in ("-l", "--label"):
             args_dict["label"] = arg
-        elif opt in ("-r", "--rows"):
-            args_dict["rows"] = int(arg)
-        elif opt in ("-c", "--columns"):
-            args_dict["columns"] = int(arg)
         elif opt in ("-y", "--y-points"):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
-        elif opt in ("-f", "--plot-cdf"):
-            args_dict["plotcdf"] = True
-        elif opt in ("-i", "--plot-tail"):
-            args_dict["plottail"] = True
-        elif opt in ("-p", "--plot-pdf"):
-            args_dict["plotpdf"] = True
-        elif opt in ("-g", "--log"):
-            args_dict["logplot"] = True
-        elif opt in ("-o", "--loglog"):
-            args_dict["loglogplot"] = True
 
     return args_dict
 
@@ -105,7 +91,7 @@ def lookup_df(folder_path, cond_num, spark):
 
     return info_json, cond_df
 
-def run_validate_pred_processes(exp_args: list):
+def run_evaluate_pred_processes(exp_args: list):
     logger.info(
         "Prepare models benchmark validate args "
         + f"with command line args: {exp_args}"
@@ -147,7 +133,7 @@ def run_validate_pred_processes(exp_args: list):
     key_mean = info_json[key_label]["mean"]
     key_scale = info_json[key_label]["scale"]
 
-    # bulk plot axis
+    # evaluation axis
     y_points = np.linspace(
         start=exp_args["y_points"][0],
         stop=exp_args["y_points"][2],
@@ -159,30 +145,8 @@ def run_validate_pred_processes(exp_args: list):
         num=exp_args["y_points"][1],
     )
 
-    # figure
-    # CDF figure
-    if exp_args["plotcdf"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        cdf_fig, cdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        cdf_axes = cdf_axes.flat
-
-    # Tail figure
-    if exp_args["plottail"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        tail_fig, tail_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        tail_axes = tail_axes.flat
-
-    # PDF figure
-    if exp_args["plotpdf"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        pdf_fig, pdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        pdf_axes = pdf_axes.flat
-
     for idx, cond_dict in enumerate(conditions):
-        logger.info(f"Plotting dataframe {idx} with conditions {cond_dict}")
+        logger.info(f"Evaluating dataframe {idx} with conditions {cond_dict}")
         cond_df = cond_dataframes[idx]
 
         # Calculate emp CDF
@@ -195,39 +159,15 @@ def run_validate_pred_processes(exp_args: list):
             emp_success_prob = success_count / total_count
             emp_cdf.append(emp_success_prob)
 
-        # Calculate emp PDF
-        emp_pdf = np.diff(np.array(emp_cdf))
-        emp_pdf = np.append(emp_pdf,[0])*exp_args["y_points"][1]/(exp_args["y_points"][2]-exp_args["y_points"][0])
+        emp_tail = np.log10(np.float64(1.00)-np.array(emp_cdf,dtype=np.float64))
+        
+        res_df = pd.DataFrame()
+        res_df["y"] = y_points_standard
+        res_df["tail.emp"] = emp_tail
 
-        if exp_args["plotcdf"]:
-            ax = cdf_axes[idx]
-            ax.plot(
-                y_points,
-                emp_cdf,
-                marker=".",
-                label="measurements",
-            )
-
-        if exp_args["plottail"]:
-            ax = tail_axes[idx]
-            ax.plot(
-                y_points,
-                np.float64(1.00)-np.array(emp_cdf,dtype=np.float64),
-                marker=".",
-                label="measurements",
-            )
-
-        if exp_args["plotpdf"]:
-            ax = pdf_axes[idx]
-            ax.plot(
-                y_points,
-                emp_pdf,
-                marker=".",
-                label="measurements",
-            )
-
-        # plot predictions
+        # predictions
         for model_list in exp_args["models"]:
+            
             model_project_name = model_list[0]
             model_conf_key = model_list[1]
             ensemble_num = model_list[2]
@@ -263,94 +203,8 @@ def run_validate_pred_processes(exp_args: list):
             y = np.array(y_points_standard, dtype=np.float64)
             #y = y.clip(min=0.00)
             prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
+            pred_tail = np.log10(np.float64(1.00)-np.array(pred_cdf,dtype=np.float64))
 
-            if exp_args["plotcdf"]:
-                ax = cdf_axes[idx]
-                ax.plot(
-                    y_points,
-                    pred_cdf,
-                    marker=".",
-                    label="prediction " + model_project_name + "." + model_conf_key + "." + ensemble_num,
-                )
-                if exp_args["logplot"]:
-                    ax.set_yscale('log')
-                elif exp_args["loglogplot"]:
-                    ax.set_yscale('log')
-                    ax.set_xscale('log')
-
-                ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
-                ax.set_ylabel("Success probability")
-                ax.grid()
-                ax.legend()
-
-            if exp_args["plottail"]:
-                ax = tail_axes[idx]
-                ax.plot(
-                    y_points,
-                    np.float64(1.00)-np.array(pred_cdf,dtype=np.float64),
-                    marker=".",
-                    label="prediction " + model_project_name + "." + model_conf_key + "." + ensemble_num,
-                )
-                if exp_args["logplot"]:
-                    ax.set_yscale('log')
-                elif exp_args["loglogplot"]:
-                    ax.set_yscale('log')
-                    ax.set_xscale('log')
-                    
-                ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
-                ax.set_ylabel("Fail probability")
-                ax.grid()
-                ax.legend()
-
-            if exp_args["plotpdf"]:
-                ax = pdf_axes[idx]
-                ax.plot(
-                    y_points,
-                    prob,
-                    marker=".",
-                    label="prediction " + model_project_name + "." + model_conf_key + "." + ensemble_num,
-                )
-                if exp_args["logplot"]:
-                    ax.set_yscale('log')
-                elif exp_args["loglogplot"]:
-                    ax.set_yscale('log')
-                    ax.set_xscale('log')
-
-                ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
-                ax.set_ylabel("probability")
-                ax.grid()
-                ax.legend()
-
-
-    if exp_args["plotcdf"]:
-        # cdf figure
-        cdf_fig.tight_layout()
-        if exp_args["logplot"]:
-            cdf_fig.savefig(project_path + f"{key_label}_log_cdf.png")
-        elif exp_args["loglogplot"]:
-            cdf_fig.savefig(project_path + f"{key_label}_loglog_cdf.png")
-        else:
-            cdf_fig.savefig(project_path + f"{key_label}_cdf.png")
-
-    if exp_args["plottail"]:
-        # cdf figure
-        tail_fig.tight_layout()
-        if exp_args["logplot"]:
-            tail_fig.savefig(project_path + f"{key_label}_log_tail.png")
-        elif exp_args["loglogplot"]:
-            tail_fig.savefig(project_path + f"{key_label}_loglog_tail.png")
-        else:
-            tail_fig.savefig(project_path + f"{key_label}_tail.png")
-
-    if exp_args["plotpdf"]:
-        # pdf figure
-        pdf_fig.tight_layout()
-        if exp_args["logplot"]:
-            pdf_fig.savefig(project_path + f"{key_label}_log_pdf.png")
-        elif exp_args["loglogplot"]:
-            pdf_fig.savefig(project_path + f"{key_label}_loglog_pdf.png")
-        else:
-            pdf_fig.savefig(project_path + f"{key_label}_pdf.png")
+            res_df[f"tail.{model_conf_key}.{ensemble_num}"]=pred_tail
+            
+        res_df.to_csv(project_path+f"{idx}.csv",index=False)

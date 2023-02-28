@@ -14,6 +14,8 @@ from .plot import parse_plot_args, plot_main
 from .train import parse_train_args, run_train_processes
 from .prep_dataset import parse_prep_dataset_args, run_prep_dataset_processes
 from .validate_pred import parse_validate_pred_args, run_validate_pred_processes
+from .plot_prepped_dataset import parse_plot_prepped_dataset_args, run_plot_prepped_dataset_processes
+from .evaluate_pred import parse_evaluate_pred_args, run_evaluate_pred_processes
 
 # very important line to make tensorflow run in sub processes
 ctx._force_start_method("spawn")
@@ -27,12 +29,18 @@ if __name__ == "__main__":
     if argv[0] == "prep_dataset":
         validate_gym_args = parse_prep_dataset_args(argv[1:])
         run_prep_dataset_processes(validate_gym_args)
+    elif argv[0] == "plot_prepped_dataset":
+        validate_gym_args = parse_plot_prepped_dataset_args(argv[1:])
+        run_plot_prepped_dataset_processes(validate_gym_args)
     elif argv[0] == "train":
         train_args = parse_train_args(argv[1:])
         run_train_processes(train_args)
     elif argv[0] == "validate_pred":
         train_args = parse_validate_pred_args(argv[1:])
         run_validate_pred_processes(train_args)
+    elif argv[0] == "evaluate_pred":
+        train_args = parse_evaluate_pred_args(argv[1:])
+        run_evaluate_pred_processes(train_args)
     elif argv[0] == "plot":
         plot_args = parse_plot_args(argv[1:])
         plot_main(plot_args)

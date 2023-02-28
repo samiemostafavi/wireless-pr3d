@@ -17,7 +17,15 @@ source venv/bin/activate
 Install dependencies
 
 ```
+sudo apt-get install openjdk-8-jdk
+pip install numpy==1.23.3
+pip install pandas==1.5.0
 pip install -Ur requirements.txt
+```
+
+To use SciencePlot, latex must be installed on your machine
+```
+sudo apt-get install dvipng texlive-latex-extra texlive-fonts-recommended cm-super
 ```
 
 ### Mixture Models
@@ -25,34 +33,45 @@ pip install -Ur requirements.txt
 Open all the `parquet` files and show a preview of them:
 ```
 python -m mixturemodels prep_dataset -d ep5g --preview
+python -m mixturemodels prep_dataset -d ep5glong --preview
 ```
 
 Prepare the dataset by the conditions defined in json format with `-x` argument.
 ```
-python -m mixturemodels prep_dataset -d ep5g -x '{"X":[1,2],"Y":[1,2,3],"RSRP":[[-75.0,-58.0]]}' -l prepped_ep5g
+python -m mixturemodels prep_dataset -d ep5glong -x '{"X":[0.5,2.0,4.0],"Y":[0.0,2.5]}' -l prepped_ep5glong_loc
+python -m mixturemodels prep_dataset -d ep5glong -x '{"RSRP":[[-81,-73],[-73,-65],[-65,-57]]}' -l prepped_ep5glong_rsrp
 ```
 
 You can normalize certain columns using `-n`:
 ```
-python -m mixturemodels prep_dataset -d ep5g -x '{"X":[1,2],"Y":[1,2,3],"RSRP":[[-75.0,-58.0]]}' -l prepped_ep5g_norm -n rtt
+python -m mixturemodels prep_dataset -d ep5glong -x '{"X":[0.5,2.0,4.0],"Y":[0.0,2.5]}' -l prepped_ep5g_norm -n X,Y
 ```
 
-Prepare the dataset by the conditions defined in json format with `-x` argument and plot the pdf and cdf for each dataframe.
+Plot the pdf, cdf, and tail plots for the prepared conditional dataframes.
 ```
-python -m mixturemodels prep_dataset -d ep5g -x '{"X":[1,2],"Y":[1,2,3],"RSRP":[[-75.0,-58.0]]}' -l prepped_ep5g -t rtt -r 1 -c 3 -y 8536766,1000,30452346 --plot-cdf --plot-pdf
+python -m mixturemodels plot_prepped_dataset -d prepped_ep5glong_loc -x 0,1,2 -t send_scaled --plot-pdf --plot-cdf -r 1 -c 3 -y 0,400,25
+python -m mixturemodels plot_prepped_dataset -d prepped_ep5glong_loc -x 0,1,2 -t send_scaled --plot-pdf --plot-cdf --log -r 1 -c 3 -y 0,400,25
+python -m mixturemodels plot_prepped_dataset -d prepped_ep5glong_loc -x 0,1,2 -t send_scaled --plot-tail --loglog -r 1 -c 3 -y 0,400,25
 ```
 
 Train models
 ```
-python -m mixturemodels train -d prepped_ep5g_norm -l trained_ep5g_norm -c mixturemodels/train_conf.json -e 10
+python -m mixturemodels train -d prepped_ep5glong_loc -l trained_ep5glong_loc_send -c mixturemodels/train_conf_ul.json -e 1
 ```
 
-Validate the models
+Validate the trained models
 ```
-python -m mixturemodels validate_pred -d prepped_ep5g_norm -t rtt_scaled -x 0,1,2 -m trained_ep5g_norm.gmm.1,trained_ep5g_norm.gmevm.1 -l validate_pred_ep5g_norm -r 1 -c 3 -y 0,1000,1
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf -r 1 -c 3 -y 0,400,25
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf --log -r 1 -c 3 -y -5,600,20
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-tail --loglog -r 1 -c 3 -y -5,600,30
 ```
 
-Plot the results (NOT IMPLEMENTED)
+Run evaluation
+```
+python -m mixturemodels evaluate_pred -d prepped_ep5glong_loc_norm -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0,trained_ep5glong_loc_send.gmevm.0 -l evaluate_pred_ep5glong_loc -y -5,600,30
+```
+
+Plot the results
 ```
 ```
 
