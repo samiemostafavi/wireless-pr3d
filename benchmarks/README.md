@@ -44,7 +44,7 @@ python -m mixturemodels prep_dataset -d ep5glong -x '{"RSRP":[[-81,-73],[-73,-65
 
 You can normalize certain columns using `-n`:
 ```
-python -m mixturemodels prep_dataset -d ep5glong -x '{"X":[0.5,2.0,4.0],"Y":[0.0,2.5]}' -l prepped_ep5g_norm -n X,Y
+python -m mixturemodels prep_dataset -d ep5glong -x '{"X":[0.5,2.0,4.0],"Y":[0.0,2.5]}' -l prepped_ep5glong_loc_norm -n X,Y
 ```
 
 Plot the pdf, cdf, and tail plots for the prepared conditional dataframes.
@@ -56,13 +56,13 @@ python -m mixturemodels plot_prepped_dataset -d prepped_ep5glong_loc -x 0,1,2 -t
 
 Train models
 ```
-python -m mixturemodels train -d prepped_ep5glong_loc -l trained_ep5glong_loc_send -c mixturemodels/train_conf_ul.json -e 1
+python -m mixturemodels train -d prepped_ep5glong_loc_norm -l trained_ep5glong_loc_send -c mixturemodels/train_conf_ul.json -e 9
 ```
 
 Validate the trained models
 ```
 python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf -r 1 -c 3 -y 0,400,25
-python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf --log -r 1 -c 3 -y 0,400,25
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf --plot-tail --log -r 1 -c 3 -y 0,400,30
 python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-tail --loglog -r 1 -c 3 -y 0,400,25
 ```
 

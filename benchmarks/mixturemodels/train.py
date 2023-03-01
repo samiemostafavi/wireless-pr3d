@@ -118,7 +118,7 @@ def run_train_processes(exp_args: list):
         logger.info(f"Starting {n_runs} jobs")
         res = pool.map_async(train_model, params_list)
         logger.info("Waiting for results")
-        res.get(1000)  # Without the timeout this blocking call ignores all signals.
+        res.get(100000)  # Without the timeout this blocking call ignores all signals.
     except KeyboardInterrupt:
         logger.info("Caught KeyboardInterrupt, terminating workers")
         pool.terminate()

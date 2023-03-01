@@ -2,17 +2,17 @@
     "gmevm" : {
         "type": "gmevm",
         "bayesian": false,
-        "centers": 6,
+        "centers": 10,
         "hidden_sizes": [10, 50, 50, 40],
         "condition_labels" : ["X", "Y"],
-        "y_label" : "send_scaled",
+        "y_label" : "send_standard",
         "training_params": {
-            "dataset_size": 128000,
-            "batch_size": 64096,
+            "dataset_size": 64000,
+            "batch_size": 32000,
             "rounds" : [
-                {"learning_rate": 1e-3, "epochs":500},
-                {"learning_rate": 1e-4, "epochs":500},
-                {"learning_rate": 1e-5, "epochs":500}
+                {"learning_rate": 1e-3, "epochs":200},
+                {"learning_rate": 1e-4, "epochs":200},
+                {"learning_rate": 1e-5, "epochs":200}
             ]
         }
     }
