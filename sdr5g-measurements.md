@@ -57,27 +57,27 @@ Downlink at Forlong (cn):
 
 ## Delay profile relation to MCS index
 
-Measurement 1:
-```
+### Measurement 1:
+
 Average RSRP: -112
 
 5G Uplink:
-MCS: 7
-Bandwidth: 6.0Mbps
+- MCS: 7
+- Bandwidth: 6.0Mbps
 
 5G Downlink:
-MCS: 7
-Bandwidth: 14.0Mbps
+- MCS: 7
+- Bandwidth: 14.0Mbps
 
 Uplink load:
-Packet length: 75Bytes 
-Packet interval: 10ms
-Bitrate: 60kbps 
-Utilization: 1%
+- Packet length: 75Bytes 
+- Packet interval: 10ms
+- Bitrate: 60kbps 
+- Utilization: 1%
 
 Downlink load:
-Packet length: 175Bytes
-Packet interval: 10ms
-Bitrate: 140kbps 
-Utilization: 1%
-```
+- Packet length: 175Bytes
+- Packet interval: 10ms
+- Bitrate: 140kbps 
+- Utilization: 1%
+
