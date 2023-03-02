@@ -30,10 +30,25 @@ docker run --rm --privileged --network host -e FULL_IMSI='001010000000001' -e FU
 
 ## 4) Test bandwidth
 
-Fingolfin (nrue):
-
+Uplink at Fingolfin (nrue):
 ```
 iperf3 -c 12.1.1.1 -u -b 100M --get-server-output
+```
+
+Downlink at Forlong (cn):
+```
+docker exec 5gcn-7-spgwu-irtt iperf3 -c 12.1.1.19 -u -b 100M --get-server-output
+```
+
+
+## 5) Run irtt
+
+Uplink at Fingolfin (nrue):
+```
+```
+
+Downlink at Forlong (cn):
+```
 ```
 
 
