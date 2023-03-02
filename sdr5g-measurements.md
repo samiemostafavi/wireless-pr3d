@@ -22,3 +22,11 @@ Fingolfin (nrue):
 ```
 docker run --rm --privileged --network host -e FULL_IMSI='001010000000001' -e FULL_KEY='fec86ba6eb707ed08905757b1bb44b8f' -e OPC='C42449363BBAD02B66D16BC975D77CC1' -e DNN='oai' -e NSSAI_SST='1' -e USE_ADDITIONAL_OPTIONS='-r 106 --numerology 1 --band 78 -C 3619200000 --nokrnmod --sa -E --uicc0.imsi 001010000000001 --uicc0.nssai_sd 1 --usrp-args addr=10.31.1.201 --ue-fo-compensation --ue-rxgain 120 --ue-txgain 0 --ue-max-power 0' --name 5g-nrue samiemostafavi/expeca-oai-nr-ue
 ```
+
+# 4) Test bandwidth
+
+Fingolfin (nrue):
+
+```
+iperf3 -c 12.1.1.1 -b 100M
+```
