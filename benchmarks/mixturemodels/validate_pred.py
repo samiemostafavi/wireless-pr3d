@@ -249,20 +249,28 @@ def run_validate_pred_processes(exp_args: list):
                     h5_addr=model_path + f"model_{ensemble_num}.h5",
                 )
 
-            cond_val_list = []
+            # define x from the conditional dataset
+            # select the columns
+            cond_columns = []
             for cond_label in cond_dict:
                 if cond_label in model_dict["condition_labels"]:
-                    if isinstance(cond_dict[cond_label],list):
-                        cond_val_list.append(sum(cond_dict[cond_label]) / 2)
-                    else:
-                        cond_val_list.append(cond_dict[cond_label])
+                    cond_columns.append(cond_label)
 
-            x = np.repeat(
-                [cond_val_list], len(y_points_standard), axis=0
-            )
+            # select columns and sample the rows
+            rows = cond_df.select(cond_columns).sample(False, (len(y_points_standard)*2)/cond_df.count(), seed=0).limit(len(y_points_standard))
+            x_rows = rows.collect()
+
+            # define x numpy list
+            x_list = []
+            for row in x_rows:
+                x_list.append([row[colm] for colm in cond_columns])
+            x = np.array(x_list)
+
+            # define y points and run the inference
             y = np.array(y_points_standard, dtype=np.float64)
             #y = y.clip(min=0.00)
             prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
+
 
             if exp_args["plotcdf"]:
                 ax = cdf_axes[idx]
