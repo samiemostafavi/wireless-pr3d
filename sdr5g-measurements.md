@@ -45,10 +45,12 @@ docker exec 5gcn-7-spgwu-irtt iperf3 -c 12.1.1.19 -u -b 100M --get-server-output
 
 Uplink at Fingolfin (nrue):
 ```
+irtt client -i 10ms -d 30m -l 75 -o /home/wlab/irtt_data/sdr5g/rtts_0.json --fill=rand 12.1.1.1
 ```
 
 Downlink at Forlong (cn):
 ```
+docker exec 5gcn-7-spgwu-irtt irtt server -l 175 --fill=rand
 ```
 
 
