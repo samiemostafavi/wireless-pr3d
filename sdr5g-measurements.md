@@ -1,0 +1,24 @@
+# SDR 5G Measurement
+
+# 1) Start core network
+
+Forlong (cn):
+
+```
+```
+
+# 2) Start gnodeb
+
+Finarfin (gnodeb):
+
+```
+docker run --rm --privileged --network host -e USE_SA_TDD_MONO_E320='yes' -e GNB_ID='e00' -e GNB_NAME='gNBOAI' -e MCC='001' -e MNC='01' -e MNC_LENGTH='2' -e TAC='1' -e NSSAI_SST='1' -e NSSAI_SD='1' -e AMF_IP_ADDRESS='192.168.70.132' -e GNB_NGA_IF_NAME='enp5s0' -e GNB_NGA_IP_ADDRESS='192.168.70.139' -e GNB_NGU_IF_NAME='enp5s0' -e GNB_NGU_IP_ADDRESS='192.168.70.139' -e ATT_TX='0' -e ATT_RX='0' -e MAX_RXGAIN='114' -e SDR_ADDRS='addr=10.31.1.202' -e THREAD_PARALLEL_CONFIG='PARALLEL_SINGLE_THREAD' -e USE_ADDITIONAL_OPTIONS='--sa --usrp-tx-thread-config 1 -E --gNBs.[0].min_rxtxtime 6' --name 5g-gnodeb samiemostafavi/expeca-oai-gnb
+```
+
+# 3) Start nrue
+
+Fingolfin (nrue):
+
+```
+docker run --rm --privileged --network host -e FULL_IMSI='001010000000001' -e FULL_KEY='fec86ba6eb707ed08905757b1bb44b8f' -e OPC='C42449363BBAD02B66D16BC975D77CC1' -e DNN='oai' -e NSSAI_SST='1' -e USE_ADDITIONAL_OPTIONS='-r 106 --numerology 1 --band 78 -C 3619200000 --nokrnmod --sa -E --uicc0.imsi 001010000000001 --uicc0.nssai_sd 1 --usrp-args addr=10.31.1.201 --ue-fo-compensation --ue-rxgain 120 --ue-txgain 0 --ue-max-power 0' --name 5g-nrue samiemostafavi/expeca-oai-nr-ue
+```
