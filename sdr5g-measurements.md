@@ -28,5 +28,5 @@ docker run --rm --privileged --network host -e FULL_IMSI='001010000000001' -e FU
 Fingolfin (nrue):
 
 ```
-iperf3 -c 12.1.1.1 -b 100M
+iperf3 -c 12.1.1.1 -u -b 100M --get-server-output
 ```
