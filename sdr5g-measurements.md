@@ -50,7 +50,7 @@ irtt client -i 10ms -d 30m -l 75 -o /home/wlab/irtt_data/sdr5g/rtts_0.json --fil
 
 Downlink at Forlong (cn):
 ```
-docker exec 5gcn-7-spgwu-irtt irtt server -l 175 --fill=rand
+docker exec -d 5gcn-7-spgwu-irtt irtt server -l 175 --fill=rand
 ```
 
 
