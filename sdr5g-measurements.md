@@ -30,6 +30,8 @@ docker run --rm --privileged --network host -e FULL_IMSI='001010000000001' -e FU
 
 ## 4) Test bandwidth
 
+Make sure `iperf3 -s` is running both on Fingolfin and spgwu container at Forlong.
+
 Uplink at Fingolfin (nrue):
 ```
 iperf3 -c 12.1.1.1 -u -b 100M --get-server-output
@@ -40,17 +42,16 @@ Downlink at Forlong (cn):
 docker exec 5gcn-7-spgwu-irtt iperf3 -c 12.1.1.19 -u -b 100M --get-server-output
 ```
 
-
 ## 5) Run irtt
 
-Uplink at Fingolfin (nrue):
+Forlong (cn):
 ```
-irtt client -i 10ms -d 30m -l 75 -o /home/wlab/irtt_data/sdr5g/rtts_0.json --fill=rand 12.1.1.1
+docker exec -d 5gcn-7-spgwu-irtt irtt server -i 0 -d 0 -l 0
 ```
 
-Downlink at Forlong (cn):
+Fingolfin (nrue):
 ```
-docker exec -d 5gcn-7-spgwu-irtt irtt server -l 175 --fill=rand
+irtt client -i 10ms -d 15m -l 75 -o /home/wlab/irtt_data/sdr5g/rtts_0.json --fill=rand 12.1.1.1
 ```
 
 
@@ -78,8 +79,8 @@ Uplink load:
 - Utilization: 1%
 
 Downlink load:
-- Packet length: 175Bytes
+- Packet length: 75Bytes
 - Packet interval: 10ms
-- Bitrate: 140kbps 
-- Utilization: 1%
+- Bitrate: 60kbps 
+- Utilization: 0.42%
 
