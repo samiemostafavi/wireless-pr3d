@@ -61,7 +61,7 @@ python -m mixturemodels train -d prepped_ep5glong_loc_norm -l trained_ep5glong_l
 
 Validate the trained models
 ```
-python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf -r 1 -c 3 -y 0,400,25
+python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf -r 1 -c 3 -y 0,400,25 
 python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-pdf --plot-cdf --plot-tail --log -r 1 -c 3 -y 0,400,30
 python -m mixturemodels validate_pred -d prepped_ep5glong_loc -t send -x 0,1,2 -m trained_ep5glong_loc_send.gmm.0 -l validate_pred_ep5glong_loc --plot-tail --loglog -r 1 -c 3 -y 0,400,25
 ```

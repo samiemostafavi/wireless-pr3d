@@ -167,6 +167,7 @@ def run_prep_dataset_processes(exp_args: list):
         from pyspark.ml import Pipeline
         from pyspark.sql.functions import udf
         from pyspark.sql.types import DoubleType
+        from pyspark.sql.functions import min, max
 
         # UDF for converting column type from vector to double type
         unlist = udf(lambda x: round(float(list(x)[0]),3), DoubleType())
@@ -184,8 +185,13 @@ def run_prep_dataset_processes(exp_args: list):
 
             # Fitting pipeline on dataframe
             df = pipeline.fit(df).transform(df).withColumn(i+"_normed", unlist(i+"_normed")).drop(i+"_vect")
-            logger.info("Dataset after normalization:")
-            df.summary().show()
+            
+            imin = df.agg(min(i)).collect()[0][0]
+            imax = df.agg(max(i)).collect()[0][0]
+            means_dict = { i:{ "min":imin, "max":imax }, **means_dict }
+
+        logger.info("Dataset after normalization:")
+        df.summary().show()
 
     logger.info("Dataset preview after scales and normalizations:")
     #df.summary().show()
