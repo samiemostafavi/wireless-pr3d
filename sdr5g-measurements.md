@@ -79,8 +79,6 @@ Uplink load:
 - Utilization: 1%
 
 Downlink load:
-- Packet length: 75Bytes
-- Packet interval: 10ms
 - Bitrate: 60kbps 
 - Utilization: 0.42%
 
