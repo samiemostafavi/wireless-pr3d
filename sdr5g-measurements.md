@@ -53,32 +53,3 @@ Fingolfin (nrue):
 ```
 irtt client -i 10ms -d 15m -l 75 -o /home/wlab/irtt_data/sdr5g/rtts_0.json --fill=rand 12.1.1.1
 ```
-
-
-# SDR 5G Measurement Schemes
-
-
-## Delay profile relation to MCS index
-
-### Measurement 1:
-
-Average RSRP: -112
-
-5G Uplink:
-- MCS: 7
-- Bandwidth: 6.0Mbps
-
-5G Downlink:
-- MCS: 7
-- Bandwidth: 14.0Mbps
-
-Uplink load:
-- Packet length: 75Bytes 
-- Packet interval: 10ms
-- Bitrate: 60kbps 
-- Utilization: 1%
-
-Downlink load:
-- Bitrate: 60kbps 
-- Utilization: 0.42%
-
