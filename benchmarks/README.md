@@ -73,6 +73,20 @@ python -m mixturemodels plot_evaluation -p evaluate_pred_ep5glong_loc -m gmm,gme
 ```
 
 
+### IEEE802.11n
+
+```
+python -m mixturemodels prep_dataset -d wifi_loc --preview
+python -m mixturemodels prep_dataset -d wifi_loc -x '{"X":[1,4,8],"Y":[0,5]}' -l prepped_wifi_loc -n X,Y
+python -m mixturemodels plot_prepped_dataset -d prepped_wifi_loc -x 0,1,2 -t send_scaled --plot-pdf -r 1 -c 3 -y 0,400,25
+python -m mixturemodels plot_prepped_dataset -d prepped_wifi_loc -x 0,1,2 -t send_scaled --plot-pdf --plot-tail --log -r 1 -c 3 -y 0,400,25
+```
+
+```
+python -m mixturemodels prep_dataset -d wifi_length -x '{"length":[172,3440,6880,10320]}' -l prepped_wifi_length -n length
+python -m mixturemodels plot_prepped_dataset -d prepped_wifi_length -x 0,1,2,3 -t send_scaled --plot-pdf -r 1 -c 4 -y 0,400,100
+python -m mixturemodels plot_prepped_dataset -d prepped_wifi_length -x 0,1,2,3 -t send_scaled --plot-pdf --plot-tail --log -r 1 -c 4 -y 0,400,100
+```
 
 # Contributing
 
