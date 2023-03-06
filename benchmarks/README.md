@@ -28,7 +28,7 @@ To use SciencePlot, latex must be installed on your machine
 sudo apt-get install dvipng texlive-latex-extra texlive-fonts-recommended cm-super
 ```
 
-### Mixture Models
+### Commercial 5G
 
 Open all the `parquet` files and show a preview of them:
 ```
@@ -42,7 +42,7 @@ python -m mixturemodels prep_dataset -d ep5glong -x '{"X":[0.5,2.0,4.0],"Y":[0.0
 python -m mixturemodels prep_dataset -d ep5glong -x '{"RSRP":[[-81,-73],[-73,-65],[-65,-57]]}' -l prepped_ep5glong_rsrp
 ```
 
-You can normalize certain columns using `-n`:
+You can normalize features using `-n`:
 ```
 python -m mixturemodels prep_dataset -d ep5glong -x '{"X":[0.5,2.0,4.0],"Y":[0.0,2.5]}' -l prepped_ep5glong_loc_norm -n X,Y
 ```
@@ -73,11 +73,6 @@ python -m mixturemodels plot_evaluation -p evaluate_pred_ep5glong_loc -m gmm,gme
 ```
 
 
-## Time Series
-
-```
-```
- 
 
 # Contributing
 
