@@ -2,8 +2,8 @@
 
 ## Delay profile relation to MCS index
 
-Average RSRP in all measurements: -112dbm
-Number of recorded samples per run: 1e6
+- Average RSRP in all measurements: -112dbm
+- Number of recorded samples per run: 1e6
 
 | Run #        | ul MCS | ul capacity | dl MCS | dl capacity | load packet len | load interval | ul util | dl util |
 | -----------  | ------ | ----------- | ------ | ----------- | --------------- | ------------- | ------- | ------- |
@@ -13,7 +13,7 @@ Number of recorded samples per run: 1e6
 | 4            | 5      | 4.52Mbps    | 5      | 9.96Mbps    | 75B             | 10ms          | 1.32%   | 0.60%   |
 
 
-Number of recorded samples per run: 1e4
+- Number of recorded samples per run: 1e4
 
 | Run #        | ul MCS | ul capacity | dl MCS | dl capacity | load packet len | load interval | ul util | dl util |
 | -----------  | ------ | ----------- | ------ | ----------- | --------------- | ------------- | ------- | ------- |
