@@ -1,4 +1,4 @@
-# SDR 5G Measurement Schemes
+# SDR 5G Benchmarking Schemes
 
 ## Delay profile relation to MCS index
 
