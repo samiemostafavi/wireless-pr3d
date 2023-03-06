@@ -10,7 +10,7 @@ Number of recorded samples per run: 1e6
 | 1            | 7      | 6.0Mbps     | 7      | 14.0Mbps    | 75B             | 10ms          | 1%      | 0.42%   |
 | 2            | 1      | 1.85Mbps    | 1      | 4.68Mbps    | 75B             | 10ms          | 3.24%   | 1.28%   |
 | 3            | 3      | 3.01Mbps    | 3      | 7.25Mbps    | 75B             | 10ms          | 1.99%   | 0.82%   |
-| 4            | 5      | ?.??Mbps    | 5      | ?.??Mbps    | 75B             | 10ms          | ?.??%   | ?.??%   |
+| 4            | 5      | 4.52Mbps    | 5      | 9.96Mbps    | 75B             | 10ms          | ?.??%   | ?.??%   |
 
 
 Number of recorded samples per run: 1e4
