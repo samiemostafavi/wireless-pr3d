@@ -4,7 +4,47 @@
 
 Forlong (cn):
 
+
 ```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.131 --name 5gcn-0-mysql samiemostafavi/expeca-mysql
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.130 -e NRF_INTERFACE_NAME_FOR_SBI='eth0' --name 5gcn-1-nrf samiemostafavi/expeca-nrf
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.136 -e NRF_INTERFACE_NAME_FOR_SBI='eth0' -e USE_FQDN_DNS='no' -e REGISTER_NRF='no' --name 5gcn-2-udr samiemostafavi/expeca-udr
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.137 -e NRF_INTERFACE_NAME_FOR_SBI='eth0' -e USE_FQDN_DNS='no' -e REGISTER_NRF='no' --name 5gcn-3-udm samiemostafavi/expeca-udm
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.138 -e NRF_INTERFACE_NAME_FOR_SBI='eth0' -e USE_FQDN_DNS='no' -e REGISTER_NRF='no' --name 5gcn-4-ausf samiemostafavi/expeca-aus
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.132 -e AMF_INTERFACE_NAME_FOR_NGAP='eth0' -e AMF_INTERFACE_NAME_FOR_N11='eth0' -e USE_FQDN_DNS='no' -e NF_REGISTRATION='no' -e SMF_SELECTION='no' --name 5gcn-5-amf samiemostafavi/expeca-amf
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.133 -e USE_FQDN_DNS='no' -e SMF_INTERFACE_NAME_FOR_N4='eth0' -e SMF_INTERFACE_NAME_FOR_SBI='eth0' -e REGISTER_NRF='no' -e DISCOVER_UPF='no' --name 5gcn-6-smf samiemostafavi/expeca-smf
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.133 -e USE_FQDN_DNS='no' -e SMF_INTERFACE_NAME_FOR_N4='eth0' -e SMF_INTERFACE_NAME_FOR_SBI='eth0' -e REGISTER_NRF='no' -e DISCOVER_UPF='no' --name 5gcn-6-smf samiemostafavi/expeca-smf
+```
+
+```
+docker run --rm -d --network oai-5gcn-net --ip 192.168.70.134 --privileged -e SGW_INTERFACE_NAME_FOR_S1U_S12_S4_UP='eth0' -e SGW_INTERFACE_NAME_FOR_SX='eth0' -e PGW_INTERFACE_NAME_FOR_SGI='eth0' -e USE_FQDN_NRF='no' -e REGISTER_NRF='no' --name 5gcn-7-spgwu samiemostafavi/expeca-spgwu-irtt
+```
+```
+docker exec -d 5gcn-7-spgwu irtt server
+```
+```
+docker exec -d 5gcn-7-spgwu iperf3 -s
 ```
 
 ## 2) Start gnodeb
