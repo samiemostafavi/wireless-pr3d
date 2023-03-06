@@ -13,7 +13,7 @@
 | 4            | 5      | 4.52Mbps    | 5      | 9.96Mbps    | 75B             | 10ms          | 1.32%   | 0.60%   |
 
 
-- Number of recorded samples per run: 1e4
+- Number of recorded samples per run: 1e5
 
 | Run #        | ul MCS | ul capacity | dl MCS | dl capacity | load packet len | load interval | ul util | dl util |
 | -----------  | ------ | ----------- | ------ | ----------- | --------------- | ------------- | ------- | ------- |
