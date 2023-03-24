@@ -97,6 +97,3 @@ scp fingolfin://home/wlab/irtt_data/wifi/sta_link.json .
 scp fingolfin://home/wlab/irtt_data/wifi/ap_link.json .
 ```
 
-# WiFi Measurement Schemes
-
-
