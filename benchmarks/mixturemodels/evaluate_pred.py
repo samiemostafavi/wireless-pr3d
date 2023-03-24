@@ -201,8 +201,9 @@ def run_evaluate_pred_processes(exp_args: list):
                 # select the columns
                 cond_columns = []
                 for cond_label in cond_dict:
-                    if cond_label in model_dict["condition_labels"]:
-                        cond_columns.append(cond_label)
+                    for model_dict_label in model_dict["condition_labels"]:
+                        if cond_label in model_dict_label:
+                            cond_columns.append(cond_label)
 
                 # select columns and sample the rows
                 rows = cond_df.select(cond_columns).sample(False, (len(y_points_standard)*2)/cond_df.count(), seed=0).limit(len(y_points_standard))
