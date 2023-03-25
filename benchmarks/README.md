@@ -88,6 +88,18 @@ python -m mixturemodels plot_prepped_dataset -d prepped_wifi_length -x 0,1,2,3 -
 python -m mixturemodels plot_prepped_dataset -d prepped_wifi_length -x 0,1,2,3 -t send_scaled --plot-pdf --plot-tail --log -r 1 -c 4 -y 0,400,100
 ```
 
+### OAI 5G
+
+```
+python -m mixturemodels prep_dataset -d oai5g/measurement --preview
+python -m mixturemodels prep_dataset -d oai5g/measurement -x '{"mcs_UL":[1,3,5,7],"mcs_DL":[1,3,5,7]}' -l oai5g/prepped_mcs_norm -n mcs_UL,mcs_DL
+python -m mixturemodels plot_prepped_dataset -d oai5g/prepped_mcs_norm -x 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -t send_scaled --plot-pdf --plot-tail --log -r 4 -c 4 -y 0,400,50 -l 1e-6,1
+python -m mixturemodels plot_prepped_dataset -d oai5g/prepped_mcs_norm -x 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -t receive_scaled --plot-pdf --plot-tail --log -r 4 -c 4 -y 0,400,50 -l 1e-6,1
+
+python -m mixturemodels prep_dataset -d oai5g/measurement -x '{"mcs_UL":[1,3,5,7]}' -l oai5g/prepped_ulmcs_norm -n mcs_UL
+python -m mixturemodels plot_prepped_dataset -d oai5g/prepped_ulmcs_norm -x 0,1,2,3 -t send_scaled --plot-pdf --plot-tail --log -r 1 -c 4 -y 0,400,50 -l 1e-6,1
+```
+
 # Contributing
 
 Use code checkers

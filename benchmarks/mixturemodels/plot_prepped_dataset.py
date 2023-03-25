@@ -27,14 +27,15 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:t:x:r:c:y:f:i:p:g:o:w",
-            ["dataset=", "target=", "condition-nums=", "rows=", "columns=", "y-points=", "plot-pdf", "plot-cdf", "plot-tail", "log", "loglog", "preview"],
+            "hd:t:x:r:c:y:l:f:i:p:g:o:w",
+            ["dataset=", "target=", "condition-nums=", "rows=", "columns=", "y-points=", "prob-lims=", "plot-pdf", "plot-cdf", "plot-tail", "log", "loglog", "preview"],
         )
     except getopt.GetoptError:
         print('Wrong args, type "python -m models_benchmark validate -h" for help')
         sys.exit(2)
 
     # default values
+    args_dict["prob_lims"] = None
     args_dict["y_points"] = [0, 100, 400]
     args_dict["plotcdf"] = False
     args_dict["plotpdf"] = False
@@ -63,6 +64,8 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
             args_dict["columns"] = int(arg)
         elif opt in ("-y", "--y-points"):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
+        elif opt in ("-l", "--log-lims"):
+            args_dict["prob_lims"] = [np.float64(s.strip()) for s in arg.split(",")]
         elif opt in ("-f", "--plot-cdf"):
             args_dict["plotcdf"] = True
         elif opt in ("-i", "--plot-tail"):
@@ -180,6 +183,9 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                     ax.set_yscale('log')
                     ax.set_xscale('log')
 
+                if exp_args["prob_lims"]:
+                    ax.set_ylim(exp_args["prob_lims"][0],exp_args["prob_lims"][1])
+
                 ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
                 ax.set_ylabel("Success probability")
@@ -199,6 +205,9 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 elif exp_args["loglogplot"]:
                     ax.set_yscale('log')
                     ax.set_xscale('log')
+
+                if exp_args["prob_lims"]:
+                    ax.set_ylim(exp_args["prob_lims"][0],exp_args["prob_lims"][1])
                     
                 ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
@@ -221,6 +230,9 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 elif exp_args["loglogplot"]:
                     ax.set_yscale('log')
                     ax.set_xscale('log')
+                
+                if exp_args["prob_lims"]:
+                    ax.set_ylim(exp_args["prob_lims"][0],exp_args["prob_lims"][1])
 
                 ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
