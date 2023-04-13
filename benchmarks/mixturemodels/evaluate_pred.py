@@ -27,21 +27,15 @@ def parse_evaluate_pred_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:t:x:m:l:r:c:y:f:i:p:g:o:",
+            "hd:t:x:m:l:y:g:",
             [
                 "dataset=",
                 "target=",
                 "condition-nums=",
                 "models=",
                 "label=",
-                "rows=",
-                "columns=",
                 "y-points=",
-                "plot-pdf", 
-                "plot-cdf", 
-                "plot-tail", 
-                "log",
-                "loglog",
+                "log"
             ],
         )
     except getopt.GetoptError:
@@ -50,11 +44,7 @@ def parse_evaluate_pred_args(argv: list[str]):
 
     # default values
     args_dict["y_points"] = [0, 100, 400]
-    args_dict["plotcdf"] = False
-    args_dict["plotpdf"] = False
-    args_dict["plottail"] = False
-    args_dict["logplot"] = False
-    args_dict["loglogplot"] = False
+    args_dict["log"] = False
 
     # parse the args
     for opt, arg in opts:
@@ -76,6 +66,8 @@ def parse_evaluate_pred_args(argv: list[str]):
             args_dict["label"] = arg
         elif opt in ("-y", "--y-points"):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
+        elif opt in ("-g", "--log"):
+            args_dict["log"] = True
 
     return args_dict
 
@@ -160,7 +152,10 @@ def run_evaluate_pred_processes(exp_args: list):
             emp_success_prob = success_count / total_count
             emp_cdf.append(emp_success_prob)
 
-        emp_tail = np.log10(np.float64(1.00)-np.array(emp_cdf,dtype=np.float64))
+        if exp_args["log"]:
+            emp_tail = np.log10(np.float64(1.00)-np.array(emp_cdf,dtype=np.float64))
+        else:
+            emp_tail = np.float64(1.00)-np.array(emp_cdf,dtype=np.float64)
         
         res_df = pd.DataFrame()
         res_df["y"] = y_points
@@ -200,10 +195,8 @@ def run_evaluate_pred_processes(exp_args: list):
                 # define x from the conditional dataset
                 # select the columns
                 cond_columns = []
-                for cond_label in cond_dict:
-                    for model_dict_label in model_dict["condition_labels"]:
-                        if cond_label in model_dict_label:
-                            cond_columns.append(cond_label)
+                for cond_label in model_dict["condition_labels"]:
+                    cond_columns.append(cond_label)
 
                 # select columns and sample the rows
                 rows = cond_df.select(cond_columns).sample(False, (len(y_points_standard)*2)/cond_df.count(), seed=0).limit(len(y_points_standard))
@@ -219,8 +212,12 @@ def run_evaluate_pred_processes(exp_args: list):
                 y = np.array(y_points_standard, dtype=np.float64)
                 #y = y.clip(min=0.00)
                 prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
-                pred_tail = np.log10(np.float64(1.00)-np.array(pred_cdf,dtype=np.float64))
 
-                res_df[f"tail.{model_conf_key}.{ensemble_num}"]=pred_tail
+                if exp_args["log"]:
+                    pred_tail = np.log10(np.float64(1.00)-np.array(pred_cdf,dtype=np.float64))
+                else:
+                    pred_tail = np.float64(1.00)-np.array(pred_cdf,dtype=np.float64)
+
+                res_df[f"tail.{model_project_name}.{model_conf_key}.{ensemble_num}"]=pred_tail
             
         res_df.to_csv(project_path+f"{idx}.csv",index=False)

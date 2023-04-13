@@ -4,11 +4,11 @@
         "bayesian": false,
         "centers": 10,
         "hidden_sizes": [10, 50, 50, 40],
-        "condition_labels" : ["X_normed", "Y_normed"],
-        "y_label" : "send_standard",
+        "condition_labels" : ["length_normed"],
+        "y_label" : "receive_standard",
         "training_params": {
-            "dataset_size": 128000,
-            "batch_size": 64096,
+            "dataset_size": 250000,
+            "batch_size": 64000,
             "rounds" : [
                 {"learning_rate": 1e-2, "epochs":200},
                 {"learning_rate": 1e-3, "epochs":400},

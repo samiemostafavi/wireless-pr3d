@@ -17,9 +17,60 @@ from loguru import logger
 from pr3d.de import ConditionalGaussianMixtureEVM, ConditionalGaussianMM
 from pyspark.sql import SparkSession
 
+import scienceplots
+plt.style.use(['science','ieee'])
+
 warnings.filterwarnings("ignore")
 
-def parse_validate_pred_args(argv: list[str]):
+markersize=5
+darker = 0.9
+MeasColorPalette = [
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1]
+]
+lighter = 1
+PredColorPalette = [
+    [
+        [0.9*lighter,0.4*lighter,0.0*lighter, 1],
+        [0.9*lighter,0.4*lighter,0.0*lighter, 1],
+        [0.9*lighter,0.4*lighter,0.0*lighter, 1]
+    ],
+    [
+        [0.2*lighter,0.8*lighter,0.1*lighter, 1],
+        [0.2*lighter,0.8*lighter,0.1*lighter, 1],
+        [0.2*lighter,0.8*lighter,0.1*lighter, 1]
+    ]
+]
+PredColorPalette = np.array(PredColorPalette)
+np.clip(PredColorPalette, 0, 1, out=PredColorPalette)
+PredLineWidth=1
+PredLine='-'
+
+xaxis_label = 'Link delay [ms]'
+
+meas_legend_labels = [
+    'meas. MCS=3',
+    'meas. MCS=5',
+    'meas. MCS=7'
+]
+
+pred_legend_labels = [
+    [
+        '_hidden',
+        '_hidden',
+        'pred. GMEVM'
+    ],
+    [
+        '_hidden',
+        '_hidden',
+        'pred. GMM'
+    ],
+]
+
+markerevery=(0.03,0.03)
+
+def parse_plot_final_validate_args(argv: list[str]):
 
     # parse arguments to a dict
     args_dict = {}
@@ -85,7 +136,7 @@ def parse_validate_pred_args(argv: list[str]):
             args_dict["columns"] = int(arg)
         elif opt in ("-y", "--y-points"):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
-        elif opt in ("-u", "--log-lims"):
+        elif opt in ("-u", "--prob-lims"):
             args_dict["prob_lims"] = [np.float64(s.strip()) for s in arg.split(",")]
         elif opt in ("-f", "--plot-cdf"):
             args_dict["plotcdf"] = True
@@ -117,7 +168,7 @@ def lookup_df(folder_path, cond_num, spark):
 
     return info_json, cond_df
 
-def run_validate_pred_processes(exp_args: list):
+def run_plot_final_validate_processes(exp_args: list):
     logger.info(
         "Prepare models benchmark validate args "
         + f"with command line args: {exp_args}"
@@ -234,7 +285,10 @@ def run_validate_pred_processes(exp_args: list):
                 y_points,
                 emp_cdf,
                 marker=exp_args["condition_markers"][idx],
-                label=f"meas. {cond_dict}",
+                markersize=markersize,
+                markevery=markerevery,
+                color=MeasColorPalette[idx],
+                label=meas_legend_labels[idx]
             )
 
         if exp_args["plottail"]:
@@ -246,7 +300,10 @@ def run_validate_pred_processes(exp_args: list):
                 y_points,
                 np.float64(1.00)-np.array(emp_cdf,dtype=np.float64),
                 marker=exp_args["condition_markers"][idx],
-                label=f"meas. {cond_dict}",
+                markersize=markersize,
+                markevery=markerevery,
+                color=MeasColorPalette[idx],
+                label=meas_legend_labels[idx]
             )
 
         if exp_args["plotpdf"]:
@@ -258,11 +315,14 @@ def run_validate_pred_processes(exp_args: list):
                 y_points,
                 emp_pdf,
                 marker=exp_args["condition_markers"][idx],
-                label=f"meas. {cond_dict}",
+                markersize=markersize,
+                markevery=markerevery,
+                color=MeasColorPalette[idx],
+                label=meas_legend_labels[idx]
             )
 
         # plot predictions
-        for model_list in exp_args["models"]:
+        for idy,model_list in enumerate(exp_args["models"]):
             model_project_name = model_list[0]
             model_conf_key = model_list[1]
             ensemble_num = model_list[2]
@@ -316,7 +376,10 @@ def run_validate_pred_processes(exp_args: list):
                     y_points,
                     pred_cdf,
                     marker="",
-                    label="pred. " + model_project_name + "." + model_conf_key + "." + ensemble_num,
+                    color=PredColorPalette[idy][idx],
+                    linewidth=PredLineWidth,
+                    linestyle=PredLine,
+                    label=pred_legend_labels[idy][idx]
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -329,9 +392,9 @@ def run_validate_pred_processes(exp_args: list):
 
                 if not single_plot:
                     ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
+                ax.set_xlabel(xaxis_label)
                 ax.set_ylabel("Success probability")
-                ax.grid()
+                ax.grid(visible=True)
                 ax.legend()
 
             if exp_args["plottail"]:
@@ -343,7 +406,10 @@ def run_validate_pred_processes(exp_args: list):
                     y_points,
                     np.float64(1.00)-np.array(pred_cdf,dtype=np.float64),
                     marker="",
-                    label="pred. " + model_project_name + "." + model_conf_key + "." + ensemble_num,
+                    color=PredColorPalette[idy][idx],
+                    linewidth=PredLineWidth,
+                    linestyle=PredLine,
+                    label=pred_legend_labels[idy][idx]
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -356,9 +422,9 @@ def run_validate_pred_processes(exp_args: list):
                     
                 if not single_plot:
                     ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
+                ax.set_xlabel(xaxis_label)
                 ax.set_ylabel("Tail probability")
-                ax.grid()
+                ax.grid(visible=True)
                 ax.legend()
 
             if exp_args["plotpdf"]:
@@ -370,7 +436,10 @@ def run_validate_pred_processes(exp_args: list):
                     y_points,
                     prob,
                     marker="",
-                    label="pred. " + model_project_name + "." + model_conf_key + "." + ensemble_num,
+                    color=PredColorPalette[idy][idx],
+                    linewidth=PredLineWidth,
+                    linestyle=PredLine,
+                    label=pred_legend_labels[idy][idx]
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -383,9 +452,9 @@ def run_validate_pred_processes(exp_args: list):
 
                 if not single_plot:
                     ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
+                ax.set_xlabel(xaxis_label)
                 ax.set_ylabel("probability")
-                ax.grid()
+                ax.grid(visible=True)
                 ax.legend()
 
 
@@ -394,27 +463,36 @@ def run_validate_pred_processes(exp_args: list):
         cdf_fig.tight_layout()
         if exp_args["logplot"]:
             cdf_fig.savefig(project_path + f"{key_label}_log_cdf.png")
+            pickle.dump(cdf_fig,open(project_path + f"{key_label}_log_cdf.pickle",'wb'))
         elif exp_args["loglogplot"]:
             cdf_fig.savefig(project_path + f"{key_label}_loglog_cdf.png")
+            pickle.dump(cdf_fig,open(project_path + f"{key_label}_loglog_cdf.pickle",'wb'))
         else:
             cdf_fig.savefig(project_path + f"{key_label}_cdf.png")
+            pickle.dump(cdf_fig,open(project_path + f"{key_label}_cdf.pickle",'wb'))
 
     if exp_args["plottail"]:
         # cdf figure
         tail_fig.tight_layout()
         if exp_args["logplot"]:
             tail_fig.savefig(project_path + f"{key_label}_log_tail.png")
+            pickle.dump(tail_fig,open(project_path + f"{key_label}_log_tail.pickle",'wb'))
         elif exp_args["loglogplot"]:
             tail_fig.savefig(project_path + f"{key_label}_loglog_tail.png")
+            pickle.dump(tail_fig,open(project_path + f"{key_label}_loglog_tail.pickle",'wb'))
         else:
             tail_fig.savefig(project_path + f"{key_label}_tail.png")
+            pickle.dump(tail_fig,open(project_path + f"{key_label}_tail.pickle",'wb'))
 
     if exp_args["plotpdf"]:
         # pdf figure
         pdf_fig.tight_layout()
         if exp_args["logplot"]:
             pdf_fig.savefig(project_path + f"{key_label}_log_pdf.png")
+            pickle.dump(pdf_fig,open(project_path + f"{key_label}_log_pdf.pickle",'wb'))
         elif exp_args["loglogplot"]:
             pdf_fig.savefig(project_path + f"{key_label}_loglog_pdf.png")
+            pickle.dump(pdf_fig,open(project_path + f"{key_label}_loglog_pdf.pickle",'wb'))
         else:
             pdf_fig.savefig(project_path + f"{key_label}_pdf.png")
+            pickle.dump(pdf_fig,open(project_path + f"{key_label}_pdf.pickle",'wb'))

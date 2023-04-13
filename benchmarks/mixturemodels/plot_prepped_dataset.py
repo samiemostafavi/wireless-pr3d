@@ -10,12 +10,17 @@ import polars
 import warnings
 from os.path import abspath, dirname
 from pathlib import Path
+import pickle
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 from loguru import logger
 from pyspark.sql import SparkSession
+
+import scienceplots
+plt.style.use(['science','ieee'])
 
 warnings.filterwarnings("ignore")
 
@@ -27,8 +32,8 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:t:x:r:c:y:l:f:i:p:g:o:w",
-            ["dataset=", "target=", "condition-nums=", "rows=", "columns=", "y-points=", "prob-lims=", "plot-pdf", "plot-cdf", "plot-tail", "log", "loglog", "preview"],
+            "hd:t:x:m:r:c:y:l:f:i:p:g:o:w",
+            ["dataset=", "target=", "condition-nums=", "condition-markers=", "rows=", "columns=", "y-points=", "prob-lims=", "plot-pdf", "plot-cdf", "plot-tail", "log", "loglog", "preview"],
         )
     except getopt.GetoptError:
         print('Wrong args, type "python -m models_benchmark validate -h" for help')
@@ -36,6 +41,7 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
 
     # default values
     args_dict["prob_lims"] = None
+    args_dict["condition_markers"] = None
     args_dict["y_points"] = [0, 100, 400]
     args_dict["plotcdf"] = False
     args_dict["plotpdf"] = False
@@ -58,6 +64,8 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
             args_dict["target"] = arg
         elif opt in ("-x", "--condition-nums"):
             args_dict["condition_nums"] = [int(s.strip()) for s in arg.split(",")]
+        elif opt in ("-m", "--condition-markers"):
+            args_dict["condition_markers"] = [s.strip() for s in arg.split(",")]
         elif opt in ("-r", "--rows"):
             args_dict["rows"] = int(arg)
         elif opt in ("-c", "--columns"):
@@ -78,6 +86,9 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
             args_dict["loglogplot"] = True
         elif opt in ("-w", "--preview"):
             args_dict["preview"] = True
+
+    if not args_dict["condition_markers"]:
+        args_dict["condition_markers"] = ["." for cond in args_dict["condition_nums"]]
 
     return args_dict
 
@@ -134,26 +145,40 @@ def run_plot_prepped_dataset_processes(exp_args: list):
 
     key_label = exp_args["target"]
 
+    single_plot = False
+    if exp_args["rows"] == 0 and exp_args["columns"] == 0:
+        single_plot = True
+
     # CDF figure
     if exp_args["plotcdf"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        cdf_fig, cdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        cdf_axes = cdf_axes.flat
+        if not single_plot:
+            nrows = exp_args["rows"]
+            ncols = exp_args["columns"]
+            cdf_fig, cdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
+            cdf_axes = cdf_axes.flat
+        else:
+            cdf_fig, cdf_ax = plt.subplots(nrows=1, ncols=1)
 
     # Tail figure
-    if exp_args["plottail"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        tail_fig, tail_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        tail_axes = tail_axes.flat
+    if exp_args["plottail"] :
+        if not single_plot:
+            nrows = exp_args["rows"]
+            ncols = exp_args["columns"]
+            tail_fig, tail_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
+            tail_axes = tail_axes.flat
+        else:
+            tail_fig, tail_ax = plt.subplots(nrows=1, ncols=1)
 
     # PDF figure
     if exp_args["plotpdf"]:
-        nrows = exp_args["rows"]
-        ncols = exp_args["columns"]
-        pdf_fig, pdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
-        pdf_axes = pdf_axes.flat
+        if not single_plot:
+            nrows = exp_args["rows"]
+            ncols = exp_args["columns"]
+            pdf_fig, pdf_axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=(7 * ncols, 5 * nrows))
+            pdf_axes = pdf_axes.flat
+        else:
+            pdf_fig, pdf_ax = plt.subplots(nrows=1, ncols=1)
+
 
     if exp_args["plotpdf"] or exp_args["plotcdf"] or exp_args["plottail"]:
         key_label = exp_args["target"]
@@ -170,12 +195,15 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 emp_cdf.append(emp_success_prob)
 
             if exp_args["plotcdf"]:
-                ax = cdf_axes[idx]
+                if not single_plot:
+                    ax = cdf_axes[idx]
+                else:
+                    ax = cdf_ax
                 ax.plot(
                     y_points,
                     emp_cdf,
-                    marker=".",
-                    label="cdf",
+                    marker=exp_args["condition_markers"][idx],
+                    label=f"{cond_dict}",
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -186,19 +214,23 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 if exp_args["prob_lims"]:
                     ax.set_ylim(exp_args["prob_lims"][0],exp_args["prob_lims"][1])
 
-                ax.set_title(f"{cond_dict}")
+                if not single_plot:
+                    ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
                 ax.set_ylabel("Success probability")
                 ax.grid()
                 ax.legend()
 
             if exp_args["plottail"]:
-                ax = tail_axes[idx]
+                if not single_plot:
+                    ax = tail_axes[idx]
+                else:
+                    ax = tail_ax
                 ax.plot(
                     y_points,
                     np.float64(1.00)-np.array(emp_cdf,dtype=np.float64),
-                    marker=".",
-                    label="tail",
+                    marker=exp_args["condition_markers"][idx],
+                    label=f"{cond_dict}",
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -209,21 +241,25 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 if exp_args["prob_lims"]:
                     ax.set_ylim(exp_args["prob_lims"][0],exp_args["prob_lims"][1])
                     
-                ax.set_title(f"{cond_dict}")
+                if not single_plot:
+                    ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
-                ax.set_ylabel("Fail probability")
+                ax.set_ylabel("Tail probability")
                 ax.grid()
                 ax.legend()
 
             if exp_args["plotpdf"]:
-                ax = pdf_axes[idx]
+                if not single_plot:
+                    ax = pdf_axes[idx]
+                else:
+                    ax = pdf_ax
                 emp_pdf = np.diff(np.array(emp_cdf))
                 emp_pdf = np.append(emp_pdf,[0])
                 ax.plot(
                     y_points,
                     emp_pdf,
-                    marker=".",
-                    label="pdf",
+                    marker=exp_args["condition_markers"][idx],
+                    label=f"{cond_dict}",
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -234,7 +270,8 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 if exp_args["prob_lims"]:
                     ax.set_ylim(exp_args["prob_lims"][0],exp_args["prob_lims"][1])
 
-                ax.set_title(f"{cond_dict}")
+                if not single_plot:
+                    ax.set_title(f"{cond_dict}")
                 ax.set_xlabel(key_label)
                 ax.set_ylabel("probability")
                 ax.grid()
@@ -245,27 +282,36 @@ def run_plot_prepped_dataset_processes(exp_args: list):
             cdf_fig.tight_layout()
             if exp_args["logplot"]:
                 cdf_fig.savefig(dataset_project_path + f"{key_label}_log_cdf.png")
+                pickle.dump(cdf_fig,open(dataset_project_path + f"{key_label}_log_cdf.pickle",'wb'))
             elif exp_args["loglogplot"]:
                 cdf_fig.savefig(dataset_project_path + f"{key_label}_loglog_cdf.png")
+                pickle.dump(cdf_fig,open(dataset_project_path + f"{key_label}_loglog_cdf.pickle",'wb'))
             else:
                 cdf_fig.savefig(dataset_project_path + f"{key_label}_cdf.png")
+                pickle.dump(cdf_fig,open(dataset_project_path + f"{key_label}_cdf.pickle",'wb'))
 
         if exp_args["plottail"]:
-            # cdf figure
+            # tail figure
             tail_fig.tight_layout()
             if exp_args["logplot"]:
                 tail_fig.savefig(dataset_project_path + f"{key_label}_log_tail.png")
+                pickle.dump(tail_fig,open(dataset_project_path + f"{key_label}_log_tail.pickle",'wb'))
             elif exp_args["loglogplot"]:
                 tail_fig.savefig(dataset_project_path + f"{key_label}_loglog_tail.png")
+                pickle.dump(tail_fig,open(dataset_project_path + f"{key_label}_loglog_tail.pickle",'wb'))
             else:
                 tail_fig.savefig(dataset_project_path + f"{key_label}_tail.png")
+                pickle.dump(tail_fig,open(dataset_project_path + f"{key_label}_tail.pickle",'wb'))
 
         if exp_args["plotpdf"]:
             # pdf figure
             pdf_fig.tight_layout()
             if exp_args["logplot"]:
                 pdf_fig.savefig(dataset_project_path + f"{key_label}_log_pdf.png")
+                pickle.dump(pdf_fig,open(dataset_project_path + f"{key_label}_log_pdf.pickle",'wb'))
             elif exp_args["loglogplot"]:
                 pdf_fig.savefig(dataset_project_path + f"{key_label}_loglog_pdf.png")
+                pickle.dump(pdf_fig,open(dataset_project_path + f"{key_label}_loglog_pdf.pickle",'wb'))
             else:
                 pdf_fig.savefig(dataset_project_path + f"{key_label}_pdf.png")
+                pickle.dump(pdf_fig,open(dataset_project_path + f"{key_label}_pdf.pickle",'wb'))

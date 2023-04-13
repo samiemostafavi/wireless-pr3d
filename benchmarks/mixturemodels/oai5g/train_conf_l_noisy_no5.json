@@ -1,0 +1,38 @@
+{
+    "gmevm" : {
+        "type": "gmevm",
+        "bayesian": false,
+        "centers": 15,
+        "hidden_sizes": [10, 100, 100, 80],
+        "condition_labels" : ["mcs_UL_normed"],
+        "y_label" : "send_noisy",
+        "training_params": {
+            "dataset_size": 600000,
+            "batch_size": 75000,
+            "rounds" : [
+                {"learning_rate": 1e-2, "epochs":200},
+                {"learning_rate": 1e-3, "epochs":200},
+                {"learning_rate": 1e-4, "epochs":200},
+                {"learning_rate": 1e-5, "epochs":200}
+            ]
+        }
+    },
+    "gmm" : {
+        "type": "gmm",
+        "bayesian": false,
+        "centers": 15,
+        "hidden_sizes": [10, 100, 100, 80],
+        "condition_labels" : ["mcs_UL_normed"],
+        "y_label" : "send_noisy",
+        "training_params": {
+            "dataset_size": 600000,
+            "batch_size": 75000,
+            "rounds" : [
+                {"learning_rate": 1e-2, "epochs":200},
+                {"learning_rate": 1e-3, "epochs":200},
+                {"learning_rate": 1e-4, "epochs":200},
+                {"learning_rate": 1e-5, "epochs":200}
+            ]
+        }
+    }
+}

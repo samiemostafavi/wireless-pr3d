@@ -285,7 +285,6 @@ def train_model(params):
         training_data = tuple([Xnp[:, i] for i in range(len(condition_labels))]) + (
             Ynp,
         )
-
         model.training_model.fit(
             x=training_data,
             y=Ynp,

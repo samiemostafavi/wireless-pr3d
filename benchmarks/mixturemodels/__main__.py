@@ -16,6 +16,7 @@ from .prep_dataset import parse_prep_dataset_args, run_prep_dataset_processes
 from .validate_pred import parse_validate_pred_args, run_validate_pred_processes
 from .plot_prepped_dataset import parse_plot_prepped_dataset_args, run_plot_prepped_dataset_processes
 from .evaluate_pred import parse_evaluate_pred_args, run_evaluate_pred_processes
+from .plot_final_validate import parse_plot_final_validate_args, run_plot_final_validate_processes
 
 # very important line to make tensorflow run in sub processes
 ctx._force_start_method("spawn")
@@ -36,8 +37,11 @@ if __name__ == "__main__":
         train_args = parse_train_args(argv[1:])
         run_train_processes(train_args)
     elif argv[0] == "validate_pred":
-        train_args = parse_validate_pred_args(argv[1:])
-        run_validate_pred_processes(train_args)
+        validate_args = parse_validate_pred_args(argv[1:])
+        run_validate_pred_processes(validate_args)
+    elif  argv[0] == "plot_final_validate":
+        plot_val_args = parse_plot_final_validate_args(argv[1:])
+        run_plot_final_validate_processes(plot_val_args)
     elif argv[0] == "evaluate_pred":
         train_args = parse_evaluate_pred_args(argv[1:])
         run_evaluate_pred_processes(train_args)

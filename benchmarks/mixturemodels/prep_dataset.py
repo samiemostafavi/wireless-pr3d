@@ -8,6 +8,7 @@ import time
 import itertools
 import polars
 import warnings
+import random
 from os.path import abspath, dirname
 from pathlib import Path
 
@@ -16,6 +17,7 @@ import numpy as np
 import polars as pl
 from loguru import logger
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import rand
 
 warnings.filterwarnings("ignore")
 
@@ -27,8 +29,8 @@ def parse_prep_dataset_args(argv: list[str]):
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:t:x:l:r:c:y:n:f:p:g:w",
-            ["dataset=", "target=", "conditions=", "label=", "rows=", "columns=", "y-points=", "normalize=", "plot-pdf", "plot-cdf", "log","preview"],
+            "hd:t:x:l:r:c:y:n:s:f:p:g:w",
+            ["dataset=", "target=", "conditions=", "label=", "rows=", "columns=", "y-points=", "normalize=", "size=", "plot-pdf", "plot-cdf", "log","preview"],
         )
     except getopt.GetoptError:
         print('Wrong args, type "python -m models_benchmark validate -h" for help')
@@ -41,6 +43,7 @@ def parse_prep_dataset_args(argv: list[str]):
     args_dict["logplot"] = False
     args_dict["preview"] = False
     args_dict["normalize"] = None
+    args_dict["cond_ds_size"] = None
 
     # parse the args
     for opt, arg in opts:
@@ -66,6 +69,8 @@ def parse_prep_dataset_args(argv: list[str]):
             args_dict["y_points"] = [int(s.strip()) for s in arg.split(",")]
         elif opt in ("-n", "--normalize"):
             args_dict["normalize"] = [s.strip() for s in arg.split(",")]
+        elif opt in ("-s", "--size"):
+            args_dict["cond_ds_size"] = int(arg)
         elif opt in ("-f", "--plot-cdf"):
             args_dict["plotcdf"] = True
         elif opt in ("-p", "--plot-pdf"):
@@ -129,22 +134,30 @@ def run_prep_dataset_processes(exp_args: list):
         return
 
     #if exp_args["scale"]:
-    from pyspark.sql.functions import col, mean
+    from pyspark.sql.functions import col, mean, randn
 
+    noise_seed = random.randint(0,1000)
     send_mean = df.select(mean('send')).collect()[0][0]
     send_scale = 1e-6
+    send_noise_variance = 1
     df = df.withColumn('send_scaled', (col('send') * send_scale))
     df = df.withColumn('send_standard', ((col('send')-send_mean) * send_scale))
+    df = df.withColumn('send_noisy', col('send_standard') + (randn(seed=noise_seed)*send_noise_variance))
 
     receive_mean = df.select(mean('receive')).collect()[0][0]
     receive_scale = 1e-6
+    receive_noise_variance = 1
     df = df.withColumn('receive_scaled', (col('receive') * receive_scale))
     df = df.withColumn('receive_standard', ((col('receive')-receive_mean) * receive_scale))
+    df = df.withColumn('receive_noisy', col('receive_standard') + (randn(seed=noise_seed)*receive_noise_variance))
 
     rtt_mean = df.select(mean('rtt')).collect()[0][0]
     rtt_scale = 1e-6
+    rtt_noise_variance = 1
     df = df.withColumn('rtt_scaled', (col('rtt') * rtt_scale))
     df = df.withColumn('rtt_standard', ((col('rtt')-rtt_mean) * rtt_scale))
+    df = df.withColumn('rtt_noisy', col('rtt_standard') + (randn(seed=noise_seed)*rtt_noise_variance))
+
 
     means_dict = {
         "send":{
@@ -253,6 +266,19 @@ def run_prep_dataset_processes(exp_args: list):
                 encoding="utf-8",
             ) as f:
                 f.write(json.dumps(condition_dict, indent = 4))
+
+
+            if exp_args["cond_ds_size"]:
+                # shuffle samples
+                cond_df = cond_df.orderBy(rand())
+                # take the desired number of records
+                cond_df = cond_df.sample(
+                    withReplacement=False,
+                    fraction=exp_args["cond_ds_size"] / cond_df.count(),
+                    seed=12345,
+                )
+
+            logger.info(f"Writing {cond_df.count()} samples to the parquet file.")
 
             # save the parquet file
             pd_cond_df = cond_df.toPandas()
