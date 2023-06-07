@@ -26,3 +26,29 @@ Run measurements on differenct wireless networks:
 - Software-defined radio 5G network by Openairinterface
 
 We considered MCS index in SDR 5G as a condition to change the wireless link's latency distribution.
+
+## Paper
+This repository contains the models, evaluation schemes, and numerics of the following paper: ***Data-Driven Latency Probability Prediction for Wireless Networks: Focusing on Tail Probabilities*** published by ... [here](https://ieeexplore.ieee.org/document/?).
+
+
+## Citing
+If you use the results of this work in your research, you can cite the paper as follows:
+```
+```
+
+If you use our extreme value theory-based predictor in your research, you can cite it as follows:
+```
+
+@INPROCEEDINGS{9708928,
+  author={Mostafavi, Seyed Samie and Dán, György and Gross, James},
+  booktitle={2021 IEEE/ACM Symposium on Edge Computing (SEC)}, 
+  title={Data-Driven End-to-End Delay Violation Probability Prediction with Extreme Value Mixture Models}, 
+  year={2021},
+  volume={},
+  number={},
+  pages={416-422},
+  doi={10.1145/3453142.3493506}
+}
+
+```
+
