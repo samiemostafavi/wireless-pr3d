@@ -1,0 +1,18 @@
+{
+    "gmm" : {
+        "type": "gmm",
+        "bayesian": false,
+        "centers": 15,
+        "y_label" : "receive_standard",
+        "training_params": {
+            "dataset_size": 200000,
+            "batch_size": 25000,
+            "rounds" : [
+                {"learning_rate": 1e-2, "epochs":200},
+                {"learning_rate": 1e-3, "epochs":400},
+                {"learning_rate": 1e-4, "epochs":100},
+                {"learning_rate": 1e-5, "epochs":100}
+            ]
+        }
+    }
+}

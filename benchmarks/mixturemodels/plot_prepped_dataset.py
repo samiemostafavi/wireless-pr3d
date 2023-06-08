@@ -24,6 +24,26 @@ plt.style.use(['science','ieee'])
 
 warnings.filterwarnings("ignore")
 
+condition_markers = [
+    '.'
+]
+markersize=6
+darker = 0.9
+MeasColorPalette = [
+    [
+        0.1*darker,
+        0.2*darker,
+        0.8*darker, 
+        1
+    ]
+]
+lighter = 1
+
+xaxis_label = 'Link delay [ms]'
+meas_legend_labels = [
+    ''
+]
+markerevery=(0.04,0.04)
 
 def parse_plot_prepped_dataset_args(argv: list[str]):
 
@@ -40,6 +60,7 @@ def parse_plot_prepped_dataset_args(argv: list[str]):
         sys.exit(2)
 
     # default values
+    args_dict["condition_nums"] = None
     args_dict["prob_lims"] = None
     args_dict["condition_markers"] = None
     args_dict["y_points"] = [0, 100, 400]
@@ -202,8 +223,13 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 ax.plot(
                     y_points,
                     emp_cdf,
-                    marker=exp_args["condition_markers"][idx],
-                    label=f"{cond_dict}",
+                    marker=condition_markers[idx],
+                    markersize=markersize,
+                    markevery=markerevery,
+                    #marker=exp_args["condition_markers"][idx],
+                    color=MeasColorPalette[idx],
+                    label=meas_legend_labels[idx]
+                    #label=f"{cond_dict}",
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -216,7 +242,8 @@ def run_plot_prepped_dataset_processes(exp_args: list):
 
                 if not single_plot:
                     ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
+
+                ax.set_xlabel("Link delay [ms]")
                 ax.set_ylabel("Success probability")
                 ax.grid()
                 ax.legend()
@@ -229,8 +256,13 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 ax.plot(
                     y_points,
                     np.float64(1.00)-np.array(emp_cdf,dtype=np.float64),
-                    marker=exp_args["condition_markers"][idx],
-                    label=f"{cond_dict}",
+                    marker=condition_markers[idx],
+                    markersize=markersize,
+                    markevery=markerevery,
+                    #marker=exp_args["condition_markers"][idx],
+                    color=MeasColorPalette[idx],
+                    label=meas_legend_labels[idx]
+                    #label=f"{cond_dict}",
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -243,7 +275,8 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                     
                 if not single_plot:
                     ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
+                
+                ax.set_xlabel("Link delay [ms]")
                 ax.set_ylabel("Tail probability")
                 ax.grid()
                 ax.legend()
@@ -258,8 +291,13 @@ def run_plot_prepped_dataset_processes(exp_args: list):
                 ax.plot(
                     y_points,
                     emp_pdf,
-                    marker=exp_args["condition_markers"][idx],
-                    label=f"{cond_dict}",
+                    marker=condition_markers[idx],
+                    markersize=markersize,
+                    markevery=markerevery,
+                    #marker=exp_args["condition_markers"][idx],
+                    color=MeasColorPalette[idx],
+                    label=meas_legend_labels[idx]
+                    #label=f"{cond_dict}",
                 )
                 if exp_args["logplot"]:
                     ax.set_yscale('log')
@@ -272,14 +310,18 @@ def run_plot_prepped_dataset_processes(exp_args: list):
 
                 if not single_plot:
                     ax.set_title(f"{cond_dict}")
-                ax.set_xlabel(key_label)
-                ax.set_ylabel("probability")
+
+                ax.set_xlabel("Link delay [ms]")
+                ax.set_ylabel("Probability")
                 ax.grid()
                 ax.legend()
 
         if exp_args["plotcdf"]:
             # cdf figure
             cdf_fig.tight_layout()
+            size = cdf_fig.get_size_inches()
+            size = [size[0],size[1]/2]
+            #cdf_fig.set_size_inches(size)
             if exp_args["logplot"]:
                 cdf_fig.savefig(dataset_project_path + f"{key_label}_log_cdf.png")
                 pickle.dump(cdf_fig,open(dataset_project_path + f"{key_label}_log_cdf.pickle",'wb'))
@@ -293,6 +335,9 @@ def run_plot_prepped_dataset_processes(exp_args: list):
         if exp_args["plottail"]:
             # tail figure
             tail_fig.tight_layout()
+            size = tail_fig.get_size_inches()
+            size = [size[0],size[1]/2]
+            #tail_fig.set_size_inches(size)
             if exp_args["logplot"]:
                 tail_fig.savefig(dataset_project_path + f"{key_label}_log_tail.png")
                 pickle.dump(tail_fig,open(dataset_project_path + f"{key_label}_log_tail.pickle",'wb'))
@@ -306,6 +351,9 @@ def run_plot_prepped_dataset_processes(exp_args: list):
         if exp_args["plotpdf"]:
             # pdf figure
             pdf_fig.tight_layout()
+            size = pdf_fig.get_size_inches()
+            size = [size[0],size[1]/2]
+            #pdf_fig.set_size_inches(size)
             if exp_args["logplot"]:
                 pdf_fig.savefig(dataset_project_path + f"{key_label}_log_pdf.png")
                 pickle.dump(pdf_fig,open(dataset_project_path + f"{key_label}_log_pdf.pickle",'wb'))

@@ -22,16 +22,18 @@ ctx._force_start_method("spawn")
 # disable GPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
+# example:
+# python -m mixturemodels train_app -d wifi/prepped_nocond_length_172 -l wifi/trained_nocond_length_172_m_test -b wifi/trained_nocond_length_172_m_noisy_test.gmm -c mixturemodels/wifi/train_conf_ul_m_nocond_app.json -e 1
 
-def parse_train_args(argv: list[str]):
+def parse_train_app_args(argv: list[str]):
 
     # parse arguments to a dict
     args_dict = {}
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:l:c:e:",
-            ["dataset=", "label=", "config=", "ensembles="],
+            "hd:l:c:e:b:",
+            ["dataset=", "label=", "config=", "ensembles=", "bulk-model="],
         )
     except getopt.GetoptError:
         print('Wrong args, type "python -m models_benchmark train -h" for help')
@@ -47,6 +49,8 @@ def parse_train_args(argv: list[str]):
             args_dict["dataset"] = arg
         elif opt in ("-l", "--label"):
             args_dict["label"] = arg
+        elif opt in ("-b", "--bulk-model"):
+            args_dict["bulk_model"] = arg.strip().split(".")
         elif opt in ("-c", "--config-file"):
             with open(arg) as json_file:
                 data = json.load(json_file)
@@ -57,7 +61,7 @@ def parse_train_args(argv: list[str]):
     return args_dict
 
 
-def run_train_processes(exp_args: list):
+def run_train_app_processes(exp_args: list):
     logger.info(
         "Prepare models benchmark experiment args "
         + f"with command line args: {exp_args}"
@@ -78,6 +82,8 @@ def run_train_processes(exp_args: list):
     original_sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
     pool = mp.Pool(n_workers)
     signal.signal(signal.SIGINT, original_sigint_handler)
+
+
 
     # create params list for each run
     n_runs = len(train_configs.keys()) * exp_args["ensembles"]
@@ -103,6 +109,8 @@ def run_train_processes(exp_args: list):
                 "sample_seed": ensemble_num * 101012,
                 "dataset_path": dataset_path,
                 "records_path": records_path,
+                "main_path": main_path,
+                "bulk_model": exp_args["bulk_model"],
                 "model_conf": model_conf,
                 "model_conf_key": model_conf_key,
                 "spark_total_memory": "70g",
@@ -195,7 +203,7 @@ def train_model(params):
     import tensorflow_addons as tfa
     from petastorm import TransformSpec
     from petastorm.spark import SparkDatasetConverter, make_spark_converter
-    from pr3d.de import ConditionalGaussianMixtureEVM, ConditionalGaussianMM, GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
+    from pr3d.de import AppendixEVM, GaussianMM
     from pyspark.sql import SparkSession
     from pyspark.sql.functions import rand
 
@@ -207,12 +215,38 @@ def train_model(params):
     model_conf = params["model_conf"]
     module_label = params["model_conf_key"]
     predictors_path = params["records_path"]
+    main_path = params["main_path"]
     training_params = model_conf["training_params"]
 
     # set data types
     # npdtype = np.float64
     # tfdtype = tf.float64
     strdtype = "float64"
+
+    # bulk model params extract
+    logger.info(f"Bulk model openning: {params['bulk_model']}")
+    bulk_model_project_name = params["bulk_model"][0]
+    bulk_model_conf_key = params["bulk_model"][1]
+    bulk_ensemble_num = params["bulk_model"][2]
+    bulk_model_path = (
+        main_path + bulk_model_project_name + "_results/" + bulk_model_conf_key + "/"
+    )
+    with open(
+        bulk_model_path + f"model_{bulk_ensemble_num}.json"
+    ) as json_file:
+        bulk_model_dict = json.load(json_file)
+
+    if "condition_labels" not in bulk_model_dict:
+        # initiate the non conditional predictor
+        if bulk_model_dict["type"] == "gmm":
+            bulk_model = GaussianMM(
+                h5_addr=bulk_model_path + f"model_{bulk_ensemble_num}.h5",
+            )
+        bulk_params = bulk_model.get_parameters()
+    else:
+        raise("Not implemented yet")
+    
+    logger.info(f"Bulk model params read: {bulk_params}")
 
     logger.info(f"Opening predictors directory '{predictors_path}'")
     os.makedirs(predictors_path, exist_ok=True)
@@ -229,64 +263,25 @@ def train_model(params):
     # get parameters
     y_label = model_conf["y_label"]
     model_type = model_conf["type"]
+    if model_type != "appendix":
+        raise(Exception("target model type should be appendix"))
     training_rounds = training_params["rounds"]
     batch_size = training_params["batch_size"]
 
-    if "condition_labels" not in model_conf:
+    # dataset pre process
+    df_train = df_train[[y_label]]
+    df_train["y_input"] = df_train[y_label]
+    df_train = df_train.drop(columns=[y_label])
 
-        # dataset pre process
-        df_train = df_train[[y_label]]
-        df_train["y_input"] = df_train[y_label]
-        df_train = df_train.drop(columns=[y_label])
+    # initiate the non conditional predictor
+    model = AppendixEVM(
+        bulk_params=bulk_params,
+        dtype=strdtype,
+        bayesian=model_conf["bayesian"]
+    )
 
-        # initiate the non conditional predictor
-        if model_type == "gmm":
-            model = GaussianMM(
-                centers=model_conf["centers"],
-                dtype=strdtype,
-                bayesian=model_conf["bayesian"]
-            )
-        elif model_type == "gmevm":
-            model = GaussianMixtureEVM(
-                centers=model_conf["centers"],
-                dtype=strdtype,
-                bayesian=model_conf["bayesian"]
-            )
-
-        X = None
-        Y = df_train.y_input
-
-    else:
-    
-        condition_labels = model_conf["condition_labels"]
-        # dataset pre process
-        df_train = df_train[[y_label, *condition_labels]]
-        df_train["y_input"] = df_train[y_label]
-        df_train = df_train.drop(columns=[y_label])
-
-        # initiate the non conditional predictor
-        if model_type == "gmm":
-            model = ConditionalGaussianMM(
-                x_dim=condition_labels,
-                centers=model_conf["centers"],
-                hidden_sizes=model_conf["hidden_sizes"],
-                dtype=strdtype,
-                bayesian=model_conf["bayesian"],
-                # batch_size = 1024,
-            )
-        elif model_type == "gmevm":
-            model = ConditionalGaussianMixtureEVM(
-                x_dim=condition_labels,
-                centers=model_conf["centers"],
-                hidden_sizes=model_conf["hidden_sizes"],
-                dtype=strdtype,
-                bayesian=model_conf["bayesian"],
-                # batch_size = 1024,
-            )
-
-        X = df_train[condition_labels]
-        Y = df_train.y_input
-
+    X = None
+    Y = df_train.y_input
 
     steps_per_epoch = len(df_train) // batch_size
 
@@ -305,29 +300,19 @@ def train_model(params):
             loss=model.loss,
         )
 
-        if X is None:
-            Xnp = np.zeros(len(Y))
-            Ynp = np.array(Y)
-            model.training_model.fit(
-                x=[Xnp, Ynp],
-                y=Ynp,
-                steps_per_epoch=steps_per_epoch,
-                epochs=round_params["epochs"],
-                verbose=1,
-            )
-        else:
-            Xnp = np.array(X)
-            Ynp = np.array(Y)
-            training_data = tuple([Xnp[:, i] for i in range(len(condition_labels))]) + (
-                Ynp,
-            )
-            model.training_model.fit(
-                x=training_data,
-                y=Ynp,
-                steps_per_epoch=steps_per_epoch,
-                epochs=round_params["epochs"],
-                verbose=1,
-            )
+        Xnp = np.zeros(len(Y))
+        Ynp = np.array(Y)
+        model.training_model.fit(
+            x=[Xnp, Ynp],
+            y=Ynp,
+            steps_per_epoch=steps_per_epoch,
+            epochs=round_params["epochs"],
+            verbose=1,
+        )
+
+    logger.info(
+        f"parameters: {model.get_parameters()}"
+    )
 
     # training done, save the model
     model.save(predictors_path + f"model_{params['ensemble_num']}.h5")

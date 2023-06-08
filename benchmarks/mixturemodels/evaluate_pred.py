@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from loguru import logger
-from pr3d.de import ConditionalGaussianMixtureEVM, ConditionalGaussianMM
+from pr3d.de import ConditionalGaussianMixtureEVM, ConditionalGaussianMM, GaussianMM, GaussianMixtureEVM, AppendixEVM
 from pyspark.sql import SparkSession
 
 warnings.filterwarnings("ignore")
@@ -43,6 +43,7 @@ def parse_evaluate_pred_args(argv: list[str]):
         sys.exit(2)
 
     # default values
+    args_dict["condition_nums"] = None
     args_dict["y_points"] = [0, 100, 400]
     args_dict["log"] = False
 
@@ -108,16 +109,6 @@ def run_evaluate_pred_processes(exp_args: list):
     # dataset project folder setting
     dataset_project_path = main_path + exp_args["dataset"] + "_results/"
 
-    # find dataframe with the desired condition
-    # inputs: exp_args["condition_nums"]
-    conditions = []
-    cond_dataframes = []
-    for cond_num in exp_args["condition_nums"]:
-        cond_dict, cond_df = lookup_df(dataset_project_path,cond_num,spark)
-        cond_dataframes.append(cond_df)
-        conditions.append(cond_dict)
-
-
     json_path = os.path.join(dataset_project_path, "info.json")
     with open(json_path, "r") as file:
         info_json = json.load(file)
@@ -137,6 +128,28 @@ def run_evaluate_pred_processes(exp_args: list):
         stop=exp_args["y_points"][2]-(key_mean*key_scale),
         num=exp_args["y_points"][1],
     )
+
+
+    # find dataframe with the desired condition
+    # inputs: exp_args["condition_nums"]
+    conditions = []
+    cond_dataframes = []
+    if exp_args["condition_nums"] is None:
+
+        parquet_path = os.path.join(dataset_project_path, "0_records.parquet")
+        the_df = spark.read.parquet(parquet_path)
+        total_count = the_df.count()
+        logger.info(f"Parquet file {parquet_path} is loaded.")
+        logger.info(f"Total number of samples in this empirical dataset: {total_count}")
+        cond_dataframes.append(the_df)
+        conditions.append({})
+
+    else:
+        for cond_num in exp_args["condition_nums"]:
+            cond_dict, cond_df = lookup_df(dataset_project_path,cond_num,spark)
+            cond_dataframes.append(cond_df)
+            conditions.append(cond_dict)
+
 
     for idx, cond_dict in enumerate(conditions):
         logger.info(f"Evaluating dataframe {idx} with conditions {cond_dict}")
@@ -183,35 +196,60 @@ def run_evaluate_pred_processes(exp_args: list):
                 ) as json_file:
                     model_dict = json.load(json_file)
 
-                if model_dict["type"] == "gmm":
-                    pr_model = ConditionalGaussianMM(
-                        h5_addr=model_path + f"model_{ensemble_num}.h5",
-                    )
-                elif model_dict["type"] == "gmevm":
-                    pr_model = ConditionalGaussianMixtureEVM(
-                        h5_addr=model_path + f"model_{ensemble_num}.h5",
-                    )
+                if "condition_labels" not in model_dict:
 
-                # define x from the conditional dataset
-                # select the columns
-                cond_columns = []
-                for cond_label in model_dict["condition_labels"]:
-                    cond_columns.append(cond_label)
+                    # initiate the non conditional predictor
+                    if model_dict["type"] == "gmm":
+                        pr_model = GaussianMM(
+                            h5_addr=model_path + f"model_{ensemble_num}.h5",
+                        )
+                    elif model_dict["type"] == "gmevm":
+                        pr_model = GaussianMixtureEVM(
+                            h5_addr=model_path + f"model_{ensemble_num}.h5",
+                        )
+                    elif model_dict["type"] == "appendix":
+                        pr_model = AppendixEVM(
+                            h5_addr=model_path + f"model_{ensemble_num}.h5",
+                        )
 
-                # select columns and sample the rows
-                rows = cond_df.select(cond_columns).sample(False, (len(y_points_standard)*2)/cond_df.count(), seed=0).limit(len(y_points_standard))
-                x_rows = rows.collect()
+                    logger.info(f"Non-conditional model parameters: {pr_model.get_parameters()}")
 
-                # define x numpy list
-                x_list = []
-                for row in x_rows:
-                    x_list.append([row[colm] for colm in cond_columns])
-                x = np.array(x_list)
+                    # define y numpy list
+                    y = np.array(y_points_standard, dtype=np.float64)
+                    #y = y.clip(min=0.00)
+                    prob, logprob, pred_cdf = pr_model.prob_batch(y)
+                
+                else:
 
-                # define y numpy list
-                y = np.array(y_points_standard, dtype=np.float64)
-                #y = y.clip(min=0.00)
-                prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
+                    if model_dict["type"] == "gmm":
+                        pr_model = ConditionalGaussianMM(
+                            h5_addr=model_path + f"model_{ensemble_num}.h5",
+                        )
+                    elif model_dict["type"] == "gmevm":
+                        pr_model = ConditionalGaussianMixtureEVM(
+                            h5_addr=model_path + f"model_{ensemble_num}.h5",
+                        )
+
+                    # define x from the conditional dataset
+                    # select the columns
+                    cond_columns = []
+                    for cond_label in model_dict["condition_labels"]:
+                        cond_columns.append(cond_label)
+
+                    # select columns and sample the rows
+                    rows = cond_df.select(cond_columns).sample(False, (len(y_points_standard)*2)/cond_df.count(), seed=0).limit(len(y_points_standard))
+                    x_rows = rows.collect()
+
+                    # define x numpy list
+                    x_list = []
+                    for row in x_rows:
+                        x_list.append([row[colm] for colm in cond_columns])
+                    x = np.array(x_list)
+
+                    # define y numpy list
+                    y = np.array(y_points_standard, dtype=np.float64)
+                    #y = y.clip(min=0.00)
+                    prob, logprob, pred_cdf = pr_model.prob_batch(x, y)
 
                 if exp_args["log"]:
                     pred_tail = np.log10(np.float64(1.00)-np.array(pred_cdf,dtype=np.float64))

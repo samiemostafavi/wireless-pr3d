@@ -44,6 +44,7 @@ def parse_prep_dataset_args(argv: list[str]):
     args_dict["preview"] = False
     args_dict["normalize"] = None
     args_dict["cond_ds_size"] = None
+    args_dict["conditions"] = None
 
     # parse the args
     for opt, arg in opts:
@@ -140,23 +141,29 @@ def run_prep_dataset_processes(exp_args: list):
     send_mean = df.select(mean('send')).collect()[0][0]
     send_scale = 1e-6
     send_noise_variance = 1
+    send_noise_highvariance = 3
     df = df.withColumn('send_scaled', (col('send') * send_scale))
     df = df.withColumn('send_standard', ((col('send')-send_mean) * send_scale))
     df = df.withColumn('send_noisy', col('send_standard') + (randn(seed=noise_seed)*send_noise_variance))
+    df = df.withColumn('send_verynoisy', col('send_standard') + (randn(seed=noise_seed)*send_noise_highvariance))
 
     receive_mean = df.select(mean('receive')).collect()[0][0]
     receive_scale = 1e-6
     receive_noise_variance = 1
+    receive_noise_highvariance = 3
     df = df.withColumn('receive_scaled', (col('receive') * receive_scale))
     df = df.withColumn('receive_standard', ((col('receive')-receive_mean) * receive_scale))
     df = df.withColumn('receive_noisy', col('receive_standard') + (randn(seed=noise_seed)*receive_noise_variance))
+    df = df.withColumn('receive_verynoisy', col('receive_standard') + (randn(seed=noise_seed)*receive_noise_highvariance))
 
     rtt_mean = df.select(mean('rtt')).collect()[0][0]
     rtt_scale = 1e-6
     rtt_noise_variance = 1
+    rtt_noise_highvariance = 3
     df = df.withColumn('rtt_scaled', (col('rtt') * rtt_scale))
     df = df.withColumn('rtt_standard', ((col('rtt')-rtt_mean) * rtt_scale))
     df = df.withColumn('rtt_noisy', col('rtt_standard') + (randn(seed=noise_seed)*rtt_noise_variance))
+    df = df.withColumn('rtt_verynoisy', col('rtt_standard') + (randn(seed=noise_seed)*rtt_noise_highvariance))
 
 
     means_dict = {
@@ -221,6 +228,29 @@ def run_prep_dataset_processes(exp_args: list):
     ) as f:
         f.write(json.dumps(means_dict, indent = 4))
 
+    if exp_args["conditions"] is None:
+        # append the conditional df to the list
+        logger.info(f"Dataframe with no conditions has {df.count()} samples.")
+
+        if exp_args["cond_ds_size"]:
+            # shuffle samples
+            df = df.orderBy(rand())
+            # take the desired number of records
+            df = df.sample(
+                withReplacement=False,
+                fraction=exp_args["cond_ds_size"] / df.count(),
+                seed=12345,
+            )
+
+        logger.info(f"Writing {df.count()} samples to the parquet file.")
+
+        # save the parquet file
+        pd_df = df.toPandas()
+        pd_df.to_parquet(
+            project_path + "0_records.parquet",
+        )
+        return
+    
     # create conditional dataframes
     empt_dict = { "cond_dataset_num" : None }
     dim_tuple = ()

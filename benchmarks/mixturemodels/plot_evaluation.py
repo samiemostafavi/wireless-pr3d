@@ -13,6 +13,8 @@ from loguru import logger
 
 
 # oai5g evaluation plot format
+
+"""
 condition_markers = [
     '.',
     '*',
@@ -63,6 +65,7 @@ pred_legend_labels = [
 markerevery=(0.03,0.03)
 """
 
+"""
 # ep5g evaluation plot format
 condition_markers = [
     '.',
@@ -132,8 +135,55 @@ pred_legend_labels = [
     ]
 ]
 markerevery=(0.03,0.03)
-
 """
+
+# ep5g evaluation plot format
+condition_markers = [
+    '.'
+]
+markersize=5
+darker = 0.9
+MeasColorPalette = [
+    [0.1*darker,0.2*darker,0.8*darker, 1]
+]
+lighter = 1
+PredColorPalette = [
+    [
+        [230/255*lighter,101/255*lighter,0*lighter, 1]
+    ],
+    [
+        [0.8*lighter,0.7*lighter,0.0*lighter, 1]
+    ],
+    [
+        [0.2*lighter,0.8*lighter,0.1*lighter, 1]
+    ],
+    [
+        [0.1*lighter,0.6*lighter,0.9*lighter, 1]
+    ]
+]
+PredColorPalette = np.array(PredColorPalette)
+np.clip(PredColorPalette, 0, 1, out=PredColorPalette)
+PredLineWidth=1
+PredLine='-'
+xaxis_label = 'Link delay [ms]'
+meas_legend_labels = [
+    'measurements 4M samples',
+]
+pred_legend_labels = [
+    [
+        'GMEVM 80k samples'
+    ],
+    [
+        'GMEVM 5k samples'
+    ],
+    [
+        'GMM 80k samples'
+    ],
+    [
+        'GMM 5k samples'
+    ]
+]
+markerevery=(0.03,0.03)
 
 
 def parse_plot_evaluation_args(argv: list[str]):
@@ -152,6 +202,7 @@ def parse_plot_evaluation_args(argv: list[str]):
 
     args_dict["prob_lims"] = None
     args_dict["single_plot"] = False    
+    args_dict["condition_nums"] = None
 
     for opt, arg in opts:
         if opt == "-h":
@@ -191,6 +242,9 @@ def plot_evaluation_main(exp_args):
 
     if exp_args["single_plot"]:
         fig, ax = plt.subplots(nrows=1, ncols=1)
+
+    if exp_args["condition_nums"] is None:
+        exp_args["condition_nums"] = [0]
 
     # read csvs inside
     for idx,cond_num in enumerate(exp_args["condition_nums"]):

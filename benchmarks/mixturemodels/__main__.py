@@ -12,6 +12,7 @@ from loguru import logger
 
 from .plot_evaluation import parse_plot_evaluation_args, plot_evaluation_main
 from .train import parse_train_args, run_train_processes
+from .train_appendix import parse_train_app_args, run_train_app_processes
 from .prep_dataset import parse_prep_dataset_args, run_prep_dataset_processes
 from .validate_pred import parse_validate_pred_args, run_validate_pred_processes
 from .plot_prepped_dataset import parse_plot_prepped_dataset_args, run_plot_prepped_dataset_processes
@@ -36,6 +37,9 @@ if __name__ == "__main__":
     elif argv[0] == "train":
         train_args = parse_train_args(argv[1:])
         run_train_processes(train_args)
+    elif argv[0] == "train_app":
+        train_args = parse_train_app_args(argv[1:])
+        run_train_app_processes(train_args)
     elif argv[0] == "validate_pred":
         validate_args = parse_validate_pred_args(argv[1:])
         run_validate_pred_processes(validate_args)
