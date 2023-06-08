@@ -26,6 +26,44 @@ To use SciencePlot, latex must be installed on your machine
 sudo apt-get install dvipng texlive-latex-extra texlive-fonts-recommended cm-super
 ```
 
+# Access the Measurements Datasets
+
+All the measurements are published on Kaggle: [wireless-pr3d](https://www.kaggle.com/datasets/samiemostafavi/wireless-pr3d).
+
+You can download them if you install Kaggle Python package and add your token
+```
+pip install kaggle
+vim /home/wlab/.kaggle/kaggle.json
+```
+
+Then download the dataset by running
+```
+cd benchmarks
+kaggle datasets download -d samiemostafavi/wireless-pr3d
+unzip wireless-pr3d.zip
+
+Prepare COTS 5G dataset:
+```
+mv COTS-5G ./mixturemodels/ep5g/measurement_validation_results
+```
+
+Prepare SDR 5G dataset:
+```
+mv SDR-5G ./mixturemodels/oai5g/measurement_results
+```
+
+Prepare IEEE802.11g dataset: 
+```
+mkdir ./mixturemodels/wifi/measurement_loc_results
+find ./IEEE80211g -type f -name 'dataset_*_172*' -exec mv -t ./mixturemodels/wifi/measurement_loc_results/ {} +
+mv IEEE80211g/ ./mixturemodels/wifi/measurement_length_results
+for i in {0..5}; do
+  find ./mixturemodels/wifi/measurement_loc_results/ -type f -name "dataset_${i}_172*" -exec mv -t ./mixturemodels/wifi/measurement_length_results/ {} +
+  find test -type f -name "dataset_${i}_172*" -exec cp -t test2 {} +
+done
+```
+
+
 ## Time Agnostic Analysis
 
 You can find the scripts to run the benchmarks in:
