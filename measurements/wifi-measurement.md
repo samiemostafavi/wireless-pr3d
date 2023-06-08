@@ -1,4 +1,7 @@
+# SDR WiFi Measurement Commands
 
+We use Mango communication implmeneted on 2 E320 USRP SDRs.
+The SDRs are connected using RJ45 ethernet to the servers: Finarfin and Fingolfin.
 
 # 1) Install requirements
 

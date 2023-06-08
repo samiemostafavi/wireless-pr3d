@@ -1,5 +1,11 @@
 # SDR 5G Measurement Commands
 
+We use Openairinterface5G implmeneted on 3 servers. Forlong server runs the core network, Finarfin server runs gnodeb, and Fingolfin runs nrUE.
+
+The following commands will run docker containers and docker networks to establish an end-to-end standalone 5G connection.
+
+The SDRs are USRP E320 and connected using SFP ethernet to the servers.
+
 ## 1) Start core network
 
 Forlong (cn):
