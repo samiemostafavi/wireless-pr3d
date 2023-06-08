@@ -15,8 +15,22 @@ Our measurements were primarily conducted to show the latency probability distri
 The purpose is to find the relation between the tail behaviour and all these conditions.
 
 
-All the measurements are published on Kaggle: [wireless-pr3d](https://www.kaggle.com/datasets/samiemostafavi/wireless-pr3d).
+## First Measurement Campaign
 
+These measurements were presented in the first conference paper.
+
+1. [COTS5G](./campaign1/COTS5G.md)
+2. [SDR5G](./campaign1/SDR5G.md)
+3. [IEEE802.11g](./campaign1/IEEE80211g.md)
+
+## Second Measurement Campaign
+
+We are planning to use ExPECA testbed for these measurements. More conditions will be investigated and more samples are planned to collect.
+
+
+# Access/Store Measurements
+
+All the measurements are published on Kaggle: [wireless-pr3d](https://www.kaggle.com/datasets/samiemostafavi/wireless-pr3d).
 
 You can download them if you install Kaggle Python package and add your token
 ```
@@ -30,3 +44,5 @@ cd benchmarks
 kaggle datasets download -d samiemostafavi/wireless-pr3d
 unzip wireless-pr3d.zip
 ```
+
+
