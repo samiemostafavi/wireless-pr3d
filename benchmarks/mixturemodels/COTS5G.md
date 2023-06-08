@@ -1,6 +1,6 @@
 # COTS5G
 
-Download the parquet files, store them in `mixturemodels/ep5g/measurement_training_results` and `mixturemodels/ep5g/measurement_validation_results`.
+Download the parquet files, store them in `mixturemodels/ep5g/measurement_validation_results`.
 
 Open all the `parquet` files and show a preview of them:
 ```
