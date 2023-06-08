@@ -26,6 +26,8 @@ To use SciencePlot, latex must be installed on your machine
 sudo apt-get install dvipng texlive-latex-extra texlive-fonts-recommended cm-super
 ```
 
+# Run the scripts!
+
 You can find the scripts to run the benchmarks in:
 1. [COTS 5G](./COTS5G.md)
 2. [IEEE802.11g](./IEEE80211g.md)
