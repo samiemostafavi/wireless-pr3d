@@ -8,7 +8,7 @@ This repository contains the instructions and scripts on:
  
 For the lateny prediction task, an upstream project [pr3d](https://github.com/samiemostafavi/pr3d) is used. To reproduce the paper results, you need to download the datasets and use them for training or evaluation of the latency predictors which are implemented in [pr3d](https://github.com/samiemostafavi/pr3d). [Pr3d](https://github.com/samiemostafavi/pr3d) uses Python, Tensorflow, and Keras.
 
-The measured latencies datasets are stored on Kaggle: [wireless-pr3d](https://www.kaggle.com/datasets/samiemostafavi/wireless-pr3d).
+The measured latencies datasets are stored on Kaggle: [wireless-pr3d version 2](https://www.kaggle.com/datasets/samiemostafavi/wireless-pr3d/versions/2).
 
 ## Goal of the work
 
