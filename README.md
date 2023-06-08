@@ -33,12 +33,10 @@ This repository contains the models, evaluation schemes, and numerics of the fol
 
 
 ## Citing
-If you use the results of this work in your research, you can cite the paper as follows:
+If you use the results of this work in your research, please cite the following papers:
 ```
-```
-
-If you use our extreme value theory-based predictor in your research, you can cite it as follows:
-```
+@INPROCEEDINGS{
+}
 
 @INPROCEEDINGS{9708928,
   author={Mostafavi, Seyed Samie and Dán, György and Gross, James},
