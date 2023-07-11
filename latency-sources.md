@@ -6,7 +6,10 @@
 * Related to the load
 * Packet scheduling and fragmentation
 
-### B) Wireless Transmission Processes
+### B) Random Access
+*  Release 15 is there, URLLC likely not. Do we have that?
+
+### B) Waveform Processing
 * Encoding, decoding
 * Modulation
 
