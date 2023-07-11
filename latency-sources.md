@@ -9,15 +9,15 @@
 ### B) Random Access
 *  Release 15 is there, URLLC likely not. Do we have that?
 
-### B) Waveform Processing
+### C) Waveform Processing
 * Encoding, decoding
 * Modulation
 
-### C) Resource allocation
+### D) Resource allocation
 * Resource block allocation
 * Transmit power allocation
 
-### D) Retransmissions (HARQ scheme)
+### E) Retransmissions (HARQ scheme)
 * Modulation and conding scheme index chosen from channel quality to keep the error rate low?
 * Dynamic
 
