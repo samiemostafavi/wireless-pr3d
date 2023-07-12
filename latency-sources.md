@@ -5,8 +5,12 @@
 ### A) Queuing or Buffering
 * Related to the load
 * Packet scheduling and fragmentation
+* PDCP queues, RLC queues
 
-### B) Scheduling Request
+### B) Transport Block Size
+* TBS
+
+### C) Scheduling Request
 * Uplink:
     * Dynamic Scheduling
     * CS(Configured Scheduling)
@@ -18,19 +22,18 @@ More info:
 * [5g scheduling sharetechnote](https://www.sharetechnote.com/html/5G/5G_Scheduling.html)
 * [Uplink resource allocations](https://jyos-sw.medium.com/uplink-resource-allocations-in-5g-nr-f9354e10cb6f)
   
-
-### C) Waveform Processing
+### D) Waveform Processing
 * Encoding, decoding
 * Modulation
 
-### D) Resource allocation
+### E) Resource allocation
 * Resource block allocation
 * Transmit power allocation
 
-### E) Retransmissions (HARQ scheme)
+### F) Retransmissions (HARQ scheme)
 * Modulation and coding scheme index (MSC) chosen from channel quality (CQI) to maximize the data throughput while maintaining an acceptable error rate.
 
-### F) HARQ Feedback
+### G) HARQ Feedback
 * Downlink ACKs: For faster feedbacks, long PUCCH or short PUCCH?
 
 ## Testbed Connections, OS Networking stack, etc
