@@ -6,7 +6,7 @@
 * Related to the load
 * Packet scheduling and fragmentation
 
-### B) Random Access
+### B) Scheduling Request
 *  Release 15 is there, URLLC likely not. Do we have that?
 
 ### C) Waveform Processing
