@@ -18,8 +18,7 @@
 * Transmit power allocation
 
 ### E) Retransmissions (HARQ scheme)
-* Modulation and conding scheme index chosen from channel quality to keep the error rate low?
-* Dynamic
+* Modulation and coding scheme index (MSC) chosen from channel quality (CQI) to maximize the data throughput while maintaining an acceptable error rate.
 
 ## Testbed Connections, OS Networking stack, etc
 * Linux networking (~100us)
