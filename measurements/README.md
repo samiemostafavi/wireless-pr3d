@@ -32,7 +32,7 @@ we need to create a service which is capable of
 2. Recording conditions from the network e.g. RSRP RSRQ from the router or other info from gNodeB
 3. Measuring maximum one-way throughput (iperf)
 
-Therefore, the service should always run iperf and irtt server
+Therefore, the service should always run iperf and irtt servers
 
 # Access/Store Measurements
 
