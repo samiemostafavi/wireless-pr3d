@@ -20,6 +20,9 @@
 ### E) Retransmissions (HARQ scheme)
 * Modulation and coding scheme index (MSC) chosen from channel quality (CQI) to maximize the data throughput while maintaining an acceptable error rate.
 
+### F) HARQ Feedback
+* Downlink ACKs: For faster feedbacks, long PUCCH or short PUCCH?
+
 ## Testbed Connections, OS Networking stack, etc
 * Linux networking (~100us)
 * End-node - nrUE 10Gbps link (~50us)
