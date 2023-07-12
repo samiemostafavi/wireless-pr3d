@@ -7,7 +7,17 @@
 * Packet scheduling and fragmentation
 
 ### B) Scheduling Request
-*  Release 15 is there, URLLC likely not. Do we have that?
+* Uplink:
+    * Dynamic Scheduling
+    * CS(Configured Scheduling)
+* Downlink:
+    * Dynamic Scheduling
+    * SPS(Semi Persistent Scheduling)
+
+More info: 
+* [5g scheduling sharetechnote](https://www.sharetechnote.com/html/5G/5G_Scheduling.html)
+* [Uplink resource allocations](https://jyos-sw.medium.com/uplink-resource-allocations-in-5g-nr-f9354e10cb6f)
+  
 
 ### C) Waveform Processing
 * Encoding, decoding
