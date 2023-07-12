@@ -27,6 +27,12 @@ These measurements were presented in the first conference paper.
 
 We are planning to use ExPECA testbed for these measurements. More conditions will be investigated and more samples are planned to collect.
 
+we need to create a service which is capable of 
+1. Recording one-way/round-trip delays on UDP packets (irtt)
+2. Recording conditions from the network e.g. RSRP RSRQ from the router or other info from gNodeB
+3. Measuring maximum one-way throughput (iperf)
+
+Therefore, the service should always run iperf and irtt server
 
 # Access/Store Measurements
 
