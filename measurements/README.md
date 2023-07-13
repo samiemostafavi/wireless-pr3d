@@ -32,7 +32,19 @@ we need to create a service which is capable of
 2. Recording conditions from the network e.g. RSRP RSRQ from the router or other info from gNodeB
 3. Measuring maximum one-way throughput (iperf)
 
-Therefore, the service should always run iperf and irtt servers
+Therefore, the service should always run iperf and irtt servers.
+
+We use the following commands to measure the bandwidth
+```
+iperf3 -s
+iperf3 -c <address> -u -b 1G --get-server-output
+```
+
+and these for packet delays
+```
+irtt server -i 0 -d 0 -l 0 -o d
+irtt client --tripm=oneway -i 5ms -l 10000 -d 10s <address>
+```
 
 # Access/Store Measurements
 
