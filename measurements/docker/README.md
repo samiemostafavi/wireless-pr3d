@@ -10,3 +10,13 @@ To test it, run this on all nodes
 ```
 docker run -d --name perf-meas --net=host samiemostafavi/perf-meas
 ```
+
+To measure bandwidth
+```
+docker exec -it perf-meas iperf3 -c <address> -u -b 1G --get-server-output
+```
+
+To measure latency
+```
+docker exec -it perf-meas irtt client --tripm=round -i 5ms -l 10000 -d 10s <address>
+```
