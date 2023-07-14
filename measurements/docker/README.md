@@ -11,6 +11,11 @@ To test it, run this on all nodes
 docker run -d --name perf-meas --net=host samiemostafavi/perf-meas
 ```
 
+You can change the location that irtt saves log files by changing the working directory
+```
+docker run -d --name perf-meas --net=host -e WORKING_DIR=/home/ samiemostafavi/perf-meas
+```
+
 To measure bandwidth
 ```
 docker exec -it perf-meas iperf3 -c <address> -u -b 1G --get-server-output
