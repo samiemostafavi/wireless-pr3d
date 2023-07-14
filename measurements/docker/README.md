@@ -37,6 +37,6 @@ To test it, run `curl http://10.10.5.1:50500` from another machine. The result i
 
 Inside perf-meas container, you can run
 ```
-python3 /tmp/adv-mobile-info-recorder.py 10s 100ms http://10.10.5.1:50000 adv01ul
+python3 /tmp/adv-mobile-info-recorder.py 10s 100ms http://10.10.5.1:50500 adv01ul
 ```
 
