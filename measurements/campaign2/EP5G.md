@@ -53,3 +53,15 @@ iperf3 -c 10.70.70.3 -u -b 1G --get-server-output
 ```
 iperf3 -c 172.16.0.8 -u -b 1G --get-server-output
 ```
+
+Measure latency
+
+**Uplink)** On the client container run:
+```
+irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 10.70.70.3
+```
+
+**Downlink)** On the edge container run:
+```
+irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 172.16.0.8
+```
