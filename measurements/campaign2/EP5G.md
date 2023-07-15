@@ -54,7 +54,7 @@ iperf3 -c 10.70.70.3 -u -b 1G --get-server-output
 iperf3 -c 172.16.0.8 -u -b 1G --get-server-output
 ```
 
-Measure latency
+## Measure latency
 
 **Uplink)** On the client container run:
 ```
