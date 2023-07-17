@@ -65,3 +65,10 @@ irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 10.70.70.3
 ```
 irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 172.16.0.8
 ```
+
+## Measure Advantech router mobile info
+
+Run this on the client container:
+```
+python3 /tmp/adv-mobile-info-recorder.py 10s 100ms http://10.42.3.1:50500 adv01ul
+```
