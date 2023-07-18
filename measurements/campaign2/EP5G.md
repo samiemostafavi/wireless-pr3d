@@ -112,7 +112,9 @@ We test whether the prediction is accurate:
 
 **Advantech router 1**
 
-On the client container
+Measured uplink bandwidth: 86.1Mbps
+
+Run on the client container
 
 - 61.44Mbps, 64kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
 ```
