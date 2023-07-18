@@ -56,9 +56,36 @@ iperf3 -c 172.16.0.8 -u -b 1G --get-server-output
 
 ## Measure latency
 
-**Uplink)** On the client container run:
+**Uplink)** On the client container
+
+- 64Mbps, 64kB packets, 120Hz:
 ```
-irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 10.70.70.3
+irtt client --tripm=oneway -i 8300us -l 64000 -d 30s 10.70.70.3
+```
+
+- 32Mbps, 64kB packets, 60Hz:
+```
+irtt client --tripm=oneway -i 16600us -l 64000 -d 10s 10.70.70.3
+```
+
+- 32Mbps, 32kB packets, 120Hz:
+```
+irtt client --tripm=oneway -i 8300us -l 32000 -d 10s 10.70.70.3
+```
+
+- 16Mbps, 16kB packets, 120Hz:
+```
+irtt client --tripm=oneway -i 8ms -l 16000 -d 10s 10.70.70.3
+```
+
+- 16Mbps, 32kB packets, 60Hz:
+```
+irtt client --tripm=oneway -i 16ms -l 20000 -d 10s 10.70.70.3
+```
+
+- 16Mbps, 40kB packets, 30Hz:
+```
+irtt client --tripm=oneway -i 32ms -l 40000 -d 10s 10.70.70.3
 ```
 
 **Downlink)** On the edge container run:
