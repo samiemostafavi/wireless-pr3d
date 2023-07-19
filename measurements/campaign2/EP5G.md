@@ -118,22 +118,22 @@ Run on the client container
 
 - 61.44Mbps, 64kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
 ```
-cd /mnt/client/m1; for i in `seq 1 4`; do irtt client --tripm=oneway -i 8300us -l 64000 -d 1666s 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms http://10.42.3.1:50500 adv01ul & wait; done
+cd /mnt/client/m1; for i in `seq 1 4`; do irtt client --tripm=oneway -i 8300us -l 64000 -d 1666s --local=:55500 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms http://10.42.3.1:50500 adv01ul & wait; done
 ```
 
 - 61.44Mbps, 2x42.6kB packets, 90Hz, 11111 seconds (7x1587), 1e6 samples:
 ```
-cd /mnt/client/m1; for i in `seq 1 7`; do irtt client --tripm=oneway -i 11110us -l 42600 -m 2 -d 1587s 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1587s 300ms http://10.42.3.1:50500 adv01ul & wait; done
+cd /mnt/client/m1; for i in `seq 1 7`; do irtt client --tripm=oneway -i 11110us -l 42600 -m 2 -d 1587s --local=:55500 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1587s 300ms http://10.42.3.1:50500 adv01ul & wait; done
 ```
 
 - 61.44Mbps, 2x64kB packets, 60Hz, 16666 seconds (10x1666), 1e6 samples:
 ```
-cd /mnt/client/m1; for i in `seq 1 10`; do irtt client --tripm=oneway -i 16600us -l 64000 -m 2 -d 1666s 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms http://10.42.3.1:50500 adv01ul & wait; done
+cd /mnt/client/m1; for i in `seq 1 10`; do irtt client --tripm=oneway -i 16600us -l 64000 -m 2 -d 1666s --local=:55500 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms http://10.42.3.1:50500 adv01ul & wait; done
 ```
 
 - 61.44Mbps, 4x64kB packets, 30Hz, 33333 seconds (20x1666), 1e6 samples:
 ```
-cd /mnt/client/m1; for i in `seq 1 20`; do irtt client --tripm=oneway -i 33201us -l 64000 -m 4 -d 1666s 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms http://10.42.3.1:50500 adv01ul & wait; done
+cd /mnt/client/m1; for i in `seq 1 20`; do irtt client --tripm=oneway -i 33201us -l 64000 -m 4 -d 1666s --local=:55500 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms http://10.42.3.1:50500 adv01ul & wait; done
 ```
 
 - 30.72Mbps, 32kB packets, 120Hz:
