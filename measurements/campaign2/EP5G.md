@@ -107,6 +107,7 @@ We test whether the prediction is accurate:
 
 NOTES:
 - `sleep 10` is important to avoid errors.
+- Also, if the client does not change its port every time it is better. That is why `55500` is set as the port.
 
 ### Uplink
 
