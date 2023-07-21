@@ -40,3 +40,15 @@ Inside perf-meas container, you can run
 python3 /tmp/adv-mobile-info-recorder.py 10s 100ms http://10.10.5.1:50500 adv01ul
 ```
 
+# Upload files to Swift
+
+Use this command to upload file `/mnt/client/m1/adv01ul_20230718_173430.json.gz` to `m1` container in Swift.
+```
+AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 upload-files.py /mnt/client/m1/adv01ul_20230718_173430.json.gz m1
+```
+
+Multiple `json.gz` files in folder `/mnt/client/m1/`:
+```
+for f in /mnt/client/m1/*.json.gz; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 upload-files.py $f m1; done
+```
+
