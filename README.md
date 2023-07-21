@@ -44,6 +44,15 @@ If you use the results of this work in your research, please cite the following 
       primaryClass={cs.NI}
 }
 
+@misc{samie mostafavi_2023,
+	title={Wireless Networks Latency Measurements},
+	url={https://www.kaggle.com/dsv/5868555},
+	DOI={10.34740/KAGGLE/DSV/5868555},
+	publisher={Kaggle},
+	author={Samie Mostafavi},
+	year={2023}
+}
+
 @INPROCEEDINGS{9708928,
   author={Mostafavi, Seyed Samie and Dán, György and Gross, James},
   booktitle={2021 IEEE/ACM Symposium on Edge Computing (SEC)}, 
