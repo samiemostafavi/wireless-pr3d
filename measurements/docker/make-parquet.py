@@ -6,9 +6,10 @@ import json
 import gzip
 from pathlib import Path
 import sys
+import os
 
-latencyfile = str(sys.argv[1])
-netinfofile = str(sys.argv[2])
+# example
+# python3 make-parquet.py 172-16-0-8-36970_7-18-23-26-32.json.gz adv01ul_20230718_232628.json.gz
 
 # Open gzip file storing a json
 def opengzip(filename):
@@ -18,45 +19,58 @@ def opengzip(filename):
     json_str = json_bytes.decode('utf-8')            # 2. string (i.e. JSON)
     data = json.loads(json_str)                      # 1. data
     return data
+
+latencyfile = str(sys.argv[1]) # Input latency json.gz file
+netinfofile = str(sys.argv[2]) # Input network information json.gz file
   
 # read gz files into dict
 latencydata = opengzip(latencyfile)
+print(f"Latency file contains {len(latencydata)} records")
 netinfodata = opengzip(netinfofile)
+print(f"Network info file contains {len(netinfodata)} records")
 
-round_trips = latencydata["round_trips"]
+# preprocess netinfo
+for i in range(len(netinfodata)):
+    if not netinfodata[i]['Band']:
+        del netinfodata[i]
 
-# Lists of delays
-data_rtt_list = [round_trip['delay']['rtt'] for round_trip in round_trips] # list of rtt values
-data_rx_list = [round_trip['delay']['receive'] for round_trip in round_trips] # list of rx times
-data_tx_list = [round_trip['delay']['send'] for round_trip in round_trips] # list of tx times
-data_timestamps_list = [round_trip['timestamps']['client']['send']['wall'] for round_trip in round_trips] # list of timestamps
+if "oneway_trips" in latencydata:
+    print("Processing: oneway trips")
 
-L = len(round_trips)
-X_list = [X] * L # create a list with X value and same elements as round_trips
-Y_list = [Y] * L # create a list with Y value and same elements as round_trips
+    latency_samples = latencydata["oneway_trips"]
+    
+elif "round_trips" in latencydata:
+    print("Processing: round trips")
+    
+    latency_samples = latencydata["round_trips"]
 
-# Lists of network conditions
-data_ntw_cond_timestamps = [measurement['timestamp'] for measurement in data2]
-data_RSRP = [measurement['RSRP'] for measurement in data2]
-data_RSRQ = [measurement['RSRQ'] for measurement in data2]
-data_channel = [measurement['Channel'] for measurement in data2]
-data_band = [measurement['Band'] for measurement in data2]
+else:
+    print("corrupt latency json")
+    exit(0)
 
-ntw_cond_t = np.array(data_ntw_cond_timestamps)
-idx = np.array([np.argmin(abs(timestamp-ntw_cond_t)) for timestamp in data_timestamps_list])
+# Match timestamps
+latency_timestamps = []
+for latency_sample in latency_samples:
+    if 'wall' in latency_sample['timestamps']['client']['send']:
+        latency_timestamps.append(latency_sample['timestamps']['client']['send']['wall'])
 
-data_df = pd.DataFrame({'rtt':data_rtt_list, 
-                        'send':data_tx_list, 
-                        'receive':data_rx_list, 
-                        'timestamp':data_timestamps_list, 
-                        'X':X_list, 
-                        'Y':Y_list,
-                        'RSRP':[data_RSRP[i] for i in idx],
-                        'RSRQ':[data_RSRQ[i] for i in idx],
-                        'channel':[data_channel[i] for i in idx],
-                        'band':[data_band[i] for i in idx]})
+latency_timestamps = np.array(latency_timestamps)
 
-print(data_df.head(10))
+#latency_timestamps = np.array([latency_sample['timestamps']['client']['send']['wall'] for latency_sample in latency_samples]) # list of timestamps
+netinfo_timestamps = np.array([measurement['timestamp'] for measurement in netinfodata])
+time_matched_idxs = np.array([np.argmin(abs(timestamp-netinfo_timestamps)) for timestamp in latency_timestamps])
 
-table_data_rtt = pa.Table.from_pandas(data_df) # create table
-pq.write_table(table_data_rtt, 'dataset_val2_'+num+'.parquet') # create parquet file 
+results = []
+for idx,midx in enumerate(time_matched_idxs):
+    results.append({**latency_samples[idx], **netinfodata[midx]})
+
+results = pd.json_normalize(results, sep=".")
+
+base_name, extensions = os.path.splitext(latencyfile)
+while extensions:
+    base_name, extensions = os.path.splitext(base_name)
+
+parquetfile = base_name + '.parquet'
+print(f"Save results into {parquetfile}")
+results.to_parquet(parquetfile)
+

@@ -52,3 +52,9 @@ Multiple `json.gz` files in folder `/mnt/client/m1/`:
 cd /tmp/; for f in /mnt/client/m1/*.json.gz; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 upload-files.py $f m1; done
 ```
 
+# Make Parquet files
+
+Use this command to combine latency and network files and convert them to Parquet
+```
+cd /tmp/; python3 make-parquet.py /mnt/server/m1/172-16-0-8-36970_7-18-23-26-32.json.gz /mnt/client/m1/adv01ul_20230718_232628.json.gz
+```
