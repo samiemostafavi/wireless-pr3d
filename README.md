@@ -35,7 +35,13 @@ This repository contains the models, evaluation schemes, and numerics of the fol
 ## Citing
 If you use the results of this work in your research, please cite the following papers:
 ```
-@INPROCEEDINGS{
+@misc{mostafavi2023datadriven,
+      title={Data-Driven Latency Probability Prediction for Wireless Networks: Focusing on Tail Probabilities}, 
+      author={Samie Mostafavi and Gourav Prateek Sharma and James Gross},
+      year={2023},
+      eprint={2307.10648},
+      archivePrefix={arXiv},
+      primaryClass={cs.NI}
 }
 
 @INPROCEEDINGS{9708928,
