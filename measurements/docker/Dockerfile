@@ -4,6 +4,9 @@ RUN go install github.com/samiemostafavi/nlmt/cmd/irtt@latest
 RUN apt-get update
 RUN apt-get install -y iperf3
 RUN apt-get install -y python3.9
+RUN apt-get install -y python3-pip
+RUN pip install keystoneauth1
+RUN pip install python-swiftclient
 
 RUN mkdir -p /tmp/results
 WORKDIR /tmp/results
