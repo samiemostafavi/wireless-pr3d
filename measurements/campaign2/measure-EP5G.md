@@ -2,7 +2,7 @@
 
 We create predictors with the following conditions:
 - Load parameters
-- Channel quality (CQI, RSRQ, RSRP)
+- Channel quality (CSQ, RSRQ, RSRP)
 
 We test whether the prediction is accurate:
 - Uplink and downlink at the same time?
