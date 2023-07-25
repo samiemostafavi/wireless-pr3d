@@ -14,6 +14,7 @@ WORKDIR /tmp/results
 COPY entrypoint.sh /tmp/entrypoint.sh
 COPY upload-files.py /tmp/upload-files.py
 COPY make-parquet.py /tmp/make-parquet.py
+COPY make-parquet.sh /tmp/make-parquet.sh
 COPY adv-mobile-info-recorder.py /tmp/adv-mobile-info-recorder.py
 RUN chmod +x /tmp/entrypoint.sh
 ENTRYPOINT ["/tmp/entrypoint.sh"]
