@@ -7,6 +7,10 @@ RUN apt-get install -y python3.9
 RUN apt-get install -y python3-pip
 RUN pip install keystoneauth1
 RUN pip install python-swiftclient
+RUN pip install numpy
+RUN pip install pandas
+RUN pip install pyarrow
+RUN pip install fastparquet
 
 RUN mkdir -p /tmp/results
 WORKDIR /tmp/results
