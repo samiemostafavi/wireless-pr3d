@@ -13,7 +13,7 @@ docker run -d --name perf-meas --net=host samiemostafavi/perf-meas
 
 You can change the location that irtt saves log files by changing the working directory
 ```
-docker run -d --name perf-meas --net=host -e WORKING_DIR=/home/ samiemostafavi/perf-meas
+docker run -d --name perf-meas --net=host -e SERVER_DIR=/home/ samiemostafavi/perf-meas
 ```
 
 To measure bandwidth
@@ -24,6 +24,30 @@ docker exec -it perf-meas iperf3 -c <address> -u -b 1G --get-server-output
 To measure latency
 ```
 docker exec -it perf-meas irtt client --tripm=round -i 5ms -l 10000 -d 10s <address>
+```
+
+# Download a file from the container
+
+We run a tiny FTP server inside the contrainer: [uFTP](https://www.uftpserver.com/wiki/uftp-server-installation)
+
+You can download any files on the container with `expeca` as username and password
+```
+wget ftp://expeca:expeca@192.168.2.2/tmp/entrypoint.sh
+```
+
+Or download a directory
+```
+wget -r ftp://expeca:expeca@192.168.2.2/tmp/
+```
+
+Upload one file to the edge container:
+```
+curl -T cl_10-42-3-2_55500_20230726_142750.json.gz ftp://10.70.70.3 --user expeca:expeca
+```
+
+Upload a directory:
+```
+for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/edgenode01/client/$(basename ${full_name}); done
 ```
 
 # Advantech router mobile network info
@@ -37,24 +61,29 @@ To test it, run `curl http://10.10.5.1:50500` from another machine. The result i
 
 Inside perf-meas container, you can run
 ```
-python3 /tmp/adv-mobile-info-recorder.py 10s 100ms http://10.10.5.1:50500 adv01ul
+python3 /tmp/adv-mobile-info-recorder.py 10s 100ms /mnt/client/m1/networkinfo http://10.10.5.1:50500 device=adv01
 ```
 
 # Upload files to Swift
 
-Use this command to upload file `/mnt/client/m1/adv01ul_20230718_173430.json.gz` to `m1` container in Swift.
+Use this command to upload file `/mnt/client/m1/networkinfo/adv01ul_20230718_173430.json.gz` to `m1` container in Swift.
 ```
-cd /tmp/; AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 upload-files.py /mnt/client/m1/adv01ul_20230718_173430.json.gz m1
+AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 /tmp/upload-files.py /mnt/client/m1/networkinfo/adv01ul_20230718_173430.json.gz m1
 ```
 
-Multiple `json.gz` files in folder `/mnt/client/m1/`:
+Multiple `json.gz` files in folder `/mnt/client/m1/networkinfo/`:
 ```
-cd /tmp/; for f in /mnt/client/m1/*.json.gz; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 upload-files.py $f m1; done
+for f in /mnt/client/m1/networkinfo/*.json.gz; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 /tmp/upload-files.py $f m1; done
 ```
 
 # Make Parquet files
 
-Use this command to combine latency and network files and convert them to Parquet
+Use this command to combine latency and network files and convert them to Parquet using Python script
 ```
-cd /tmp/; python3 make-parquet.py /mnt/server/m1/172-16-0-8-36970_7-18-23-26-32.json.gz /mnt/client/m1/adv01ul_20230718_232628.json.gz
+python3 /tmp/makeparquet.py /mnt/client/m1/client/cl_104232_55500_2023725_15730.json.gz /mnt/server/m1/server/se_1721608_55500_2023725_15730.json.gz /mnt/client/m1/network/mni_20230725_150725.json.gz trip=uplink
+```
+
+Use this command to combine files on the client side and server side and make a parquet
+```
+python3 /tmp/parquets-from-folders.py /mnt/client/results /mnt/client/m1/client /mnt/server/m1/server /mnt/client/m1/networkinfo trip=uplink device=adv01
 ```

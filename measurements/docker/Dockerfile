@@ -1,5 +1,5 @@
 FROM golang:1.19.3
-RUN go install github.com/samiemostafavi/nlmt/cmd/irtt@latest
+RUN go install github.com/samiemostafavi/nlmt/cmd/irtt@v0.9.11
 
 RUN apt-get update
 RUN apt-get install -y iperf3
@@ -12,13 +12,20 @@ RUN pip install pandas
 RUN pip install pyarrow
 RUN pip install fastparquet
 
-RUN mkdir -p /tmp/results
-WORKDIR /tmp/results
+WORKDIR /sbin/
+RUN wget http://www.uftpserver.com/downloads/binaries/latest/x64/uFTP
+WORKDIR /etc/
+COPY uftpd.cfg /etc/uftpd.cfg
+RUN chown root:root /sbin/uFTP
+RUN chown root:root /etc/uftpd.cfg
+#RUN chmod -rwx /etc/uftpd.cfg
+RUN chmod +x /sbin/uFTP
 
+WORKDIR /tmp/
 COPY entrypoint.sh /tmp/entrypoint.sh
 COPY upload-files.py /tmp/upload-files.py
-COPY make-parquet.py /tmp/make-parquet.py
-COPY make-parquet.sh /tmp/make-parquet.sh
+COPY makeparquet.py /tmp/makeparquet.py
+COPY parquets-from-folders.py /tmp/parquets-from-folders.py
 COPY adv-mobile-info-recorder.py /tmp/adv-mobile-info-recorder.py
 RUN chmod +x /tmp/entrypoint.sh
 ENTRYPOINT ["/tmp/entrypoint.sh"]
