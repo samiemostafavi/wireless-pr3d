@@ -109,19 +109,24 @@ irtt client --tripm=oneway -i 16600us -l 16000 -d 10s 10.70.70.3
 irtt client --tripm=oneway -i 33200us -l 32000 -d 10s 10.70.70.3
 ```
 
-Upload files in the client results folder:
-```
-for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/client/$(basename ${full_name}); done
-```
-
-Upload files in the networkinfo results folder:
-```
-for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/networkinfo/$(basename ${full_name}); done
-```
-
 ### Downlink 
 
 On the edge container run:
 ```
 irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 172.16.0.8
+```
+
+## Upload and processing the files
+
+On the endnode, upload files in the client and networkinfo folders:
+```
+for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/client/$(basename ${file}); done
+```
+```
+for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/networkinfo/$(basename ${file}); done
+```
+
+At the edge, run the following to create parquet files
+```
+python3 /tmp/parquets-from-folders.py /mnt/volume/m1/results /mnt/volume/m1/endnode01/client /mnt/volume/m1/edge/server /mnt/volume/m1/endnode01/networkinfo trip=uplink
 ```
