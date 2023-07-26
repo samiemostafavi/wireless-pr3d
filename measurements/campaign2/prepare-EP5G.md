@@ -5,7 +5,7 @@ Reserve
 * Advantech-01
 * Worker-01
 
-Create 2 volumes, one for the server and one for the client.
+Create 2 volumes, one for the edge server and one for the end-node.
 * edge-volume
 * endnode01-volume
 
