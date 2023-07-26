@@ -26,6 +26,16 @@ To measure latency
 docker exec -it perf-meas irtt client --tripm=round -i 5ms -l 10000 -d 10s <address>
 ```
 
+# Download a file from the container
+
+We run a tiny FTP server inside the contrainer: [uFTP](https://www.uftpserver.com/wiki/uftp-server-installation)
+
+You can download any files on the container with `expeca` as username and password
+```
+wget ftp://expeca:expeca@192.168.2.2/tmp/entrypoint.sh
+```
+
+
 # Advantech router mobile network info
 
 Follow instructions [here](https://github.com/samiemostafavi/advmobileinfo)
