@@ -111,12 +111,12 @@ irtt client --tripm=oneway -i 33200us -l 32000 -d 10s 10.70.70.3
 
 Upload files in the client results folder:
 ```
-for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/edgenode01/client/$(basename ${full_name}); done
+for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/client/$(basename ${full_name}); done
 ```
 
 Upload files in the networkinfo results folder:
 ```
-for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/edgenode01/networkinfo/$(basename ${full_name}); done
+for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/networkinfo/$(basename ${full_name}); done
 ```
 
 ### Downlink 
