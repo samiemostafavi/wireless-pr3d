@@ -40,7 +40,7 @@ No volumes
 
 ENV Variables, set SERVER_DIR, if it is measurement round 1 (m1)
 ```
-SERVER_DIR=/tmp/m1/endnode01/server
+SERVER_DIR=/tmp/m1/server
 ```
 
 Labels
@@ -82,10 +82,10 @@ irtt client --tripm=oneway -i 2ms -l 64000 -d 10s 172.16.0.8
 
 Run this on the client container:
 ```
-python3 /tmp/adv-mobile-info-recorder.py 10s 100ms /tmp/m1/endnode01/networkinfo http://10.42.3.1:50500 device=adv01
+python3 /tmp/adv-mobile-info-recorder.py 10s 100ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01
 ```
 
 Measure latency with mobile info:
 ```
-irtt client --tripm=oneway -i 2ms -l 64000 -d 10s -o d --outdir=/tmp/m1/endnode01/client 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 10s 300ms /tmp/m1/endnode01/networkinfo http://10.42.3.1:50500 device=adv01 && fg
+irtt client --tripm=oneway -i 2ms -l 64000 -d 10s -o d --outdir=/tmp/m1/client 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 10s 300ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01 && fg
 ```
