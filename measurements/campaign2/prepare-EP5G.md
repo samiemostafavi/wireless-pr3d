@@ -15,12 +15,12 @@ Networks:
 * Edge-Net (`10.70.70.0/24`)
 
 Volumes:
-* server-volume
-* mount on `/mnt/server`
+* edge-volume
+* mount on `/mnt/edge`
 
-ENV Variables
+ENV Variables, set SERVER_DIR, if it is measurement round 1 (m1)
 ```
-SERVER_DIR=/mnt/server/m1
+SERVER_DIR=/mnt/edge/server/m1
 ```
 
 Labels
@@ -38,12 +38,12 @@ Networks:
 * Adv-01-net (`10.42.3.0/24`)
 
 Volumes:
-* client-volume
-* mount on `/mnt/client`
+* endnode01-volume
+* mount on `/mnt/endnode01`
 
-ENV Variables
+ENV Variables, set SERVER_DIR, if it is measurement round 1 (m1)
 ```
-WORKING_DIR=/mnt/client/m1
+SERVER_DIR=/mnt/endnode01/server/m1
 ```
 
 Labels
@@ -85,10 +85,10 @@ irtt client --tripm=oneway -i 2ms -l 64000 -d 10s 172.16.0.8
 
 Run this on the client container:
 ```
-python3 /tmp/adv-mobile-info-recorder.py 10s 100ms ./networkinfo http://10.42.3.1:50500 device=adv01
+python3 /tmp/adv-mobile-info-recorder.py 10s 100ms /mnt/endnode01/networkinfo/m1/ http://10.42.3.1:50500 device=adv01
 ```
 
 Measure latency with mobile info:
 ```
-irtt client --tripm=oneway -i 2ms -l 64000 -d 10s -o d --outdir=./client 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 10s 300ms ./networkinfo http://10.42.3.1:50500 device=adv01 && fg
+irtt client --tripm=oneway -i 2ms -l 64000 -d 10s -o d --outdir=/mnt/endnode01/client/m1/ 10.70.70.3 & python3 /tmp/adv-mobile-info-recorder.py 10s 300ms ./networkinfo http://10.42.3.1:50500 device=adv01 && fg
 ```
