@@ -40,6 +40,15 @@ Or download a directory
 wget -r ftp://expeca:expeca@192.168.2.2/tmp/
 ```
 
+Upload one file to the edge container:
+```
+curl -T cl_10-42-3-2_55500_20230726_142750.json.gz ftp://10.70.70.3 --user expeca:expeca
+```
+
+Upload a directory:
+```
+for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/edgenode01/client/$(basename ${full_name}); done
+```
 
 # Advantech router mobile network info
 
