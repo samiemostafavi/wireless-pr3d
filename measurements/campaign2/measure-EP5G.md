@@ -24,9 +24,9 @@ Measured uplink bandwidth: 86.1Mbps
 
 Run on the client container
 
-- 83.75Mbps, 2x43.5kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
+- ?Mbps, 2x45.6kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
 ```
-for i in `seq 1 4`; do (sleep 60 && irtt client --tripm=oneway -i 8300us -l 43500 -m 2 -d 1666s -o d --outdir=/tmp/m1/client --local=:55500 10.70.70.3) & (sleep 60 && python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01) & wait; done > /proc/1/fd/1 2>&1
+for i in `seq 1 4`; do (sleep 60 && irtt client --tripm=oneway -i 8300us -l 45600 -m 2 -d 1666s -o d --outdir=/tmp/m1/client --local=:55500 10.70.70.3) & (sleep 60 && python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01) & wait; done > /proc/1/fd/1 2>&1
 ```
 
 - 61.44Mbps, 64kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
@@ -109,17 +109,12 @@ irtt client --tripm=oneway -i 16600us -l 16000 -d 10s 10.70.70.3
 irtt client --tripm=oneway -i 33200us -l 32000 -d 10s 10.70.70.3
 ```
 
-Upload one file to the edge container:
-```
-curl -T cl_10-42-3-2_55500_20230726_142750.json.gz ftp://10.70.70.3 --user expeca:expeca
-```
-
-Upload add files in the client results folder:
+Upload files in the client results folder:
 ```
 for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/edgenode01/client/$(basename ${full_name}); done
 ```
 
-Upload add files in the networkinfo results folder:
+Upload files in the networkinfo results folder:
 ```
 for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/edgenode01/networkinfo/$(basename ${full_name}); done
 ```
