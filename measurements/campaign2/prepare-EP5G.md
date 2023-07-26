@@ -6,8 +6,8 @@ Reserve
 * Worker-01
 
 Create 2 volumes, one for the server and one for the client.
-* server-volume
-* client-volume
+* edge-volume
+* endnode01-volume
 
 ## Bring Up the edge server on Worker-01
 
