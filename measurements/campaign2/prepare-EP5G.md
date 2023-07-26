@@ -40,7 +40,7 @@ No volumes
 
 ENV Variables, set SERVER_DIR, if it is measurement round 1 (m1)
 ```
-SERVER_DIR=/tmp/results/m1/endnode01/server
+SERVER_DIR=/tmp/m1/endnode01/server
 ```
 
 Labels
