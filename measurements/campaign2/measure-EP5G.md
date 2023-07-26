@@ -24,9 +24,9 @@ Measured uplink bandwidth: 86.1Mbps
 
 Run on the client container
 
-- ?Mbps, 2x45.6kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
+- ?Mbps, 2x44.5kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
 ```
-for i in `seq 1 4`; do (sleep 60 && irtt client --tripm=oneway -i 8300us -l 45600 -m 2 -d 1666s -o d --outdir=/tmp/m1/client --local=:55500 10.70.70.3) & (sleep 60 && python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01) & wait; done > /proc/1/fd/1 2>&1
+for i in `seq 1 4`; do (sleep 60 && irtt client --tripm=oneway -i 8300us -l 44500 -m 2 -d 1666s -o d --outdir=/tmp/m1/client --local=:55500 10.70.70.3) & (sleep 60 && python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01) & wait; done > /proc/1/fd/1 2>&1
 ```
 
 - 61.44Mbps, 64kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
