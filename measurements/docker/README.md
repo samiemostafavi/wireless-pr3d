@@ -35,6 +35,11 @@ You can download any files on the container with `expeca` as username and passwo
 wget ftp://expeca:expeca@192.168.2.2/tmp/entrypoint.sh
 ```
 
+Or download a directory
+```
+wget -r ftp://expeca:expeca@192.168.2.2/tmp/
+```
+
 
 # Advantech router mobile network info
 
