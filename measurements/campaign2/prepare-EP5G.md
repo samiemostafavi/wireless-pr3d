@@ -32,7 +32,7 @@ Test:
 Make sure from Advantech-01 you can ping `10.70.70.3`.
 
 
-## Bring up the client on Worker-01
+## Bring up the end-node on Worker-01
 
 Networks:
 * Adv-01-net (`10.42.3.0/24`)
