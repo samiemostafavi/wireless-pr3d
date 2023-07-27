@@ -17,9 +17,9 @@ NOTES:
 ## Measurement Session 1 
 
 - Group name: `m1`
-- UE: Advantech-01
-- Direction: uplink
-- Measured UDP uplink bandwidth using iperf3: `86.1Mbps`
+- Device: `adv01`
+- Direction: `uplink`
+- Maximum throughput: `86.1Mbps`
 
 Latency measurements:
 
