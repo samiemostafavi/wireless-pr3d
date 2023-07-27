@@ -118,7 +118,7 @@ irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 172.16.0.8
 
 ## Upload and processing the files
 
-On the endnode, upload files in the client and networkinfo folders:
+On the endnode, upload the produced files located at client and networkinfo folders:
 ```
 for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/client/$(basename ${file}); done
 ```
@@ -128,5 +128,5 @@ for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dir
 
 At the edge, run the following to create parquet files
 ```
-python3 /tmp/parquets-from-folders.py /mnt/volume/m1/results /mnt/volume/m1/endnode01/client /mnt/volume/m1/edge/server /mnt/volume/m1/endnode01/networkinfo trip=uplink
+python3 /tmp/parquets-from-folders.py /mnt/volume/m1/results /mnt/volume/m1/endnode01/client /mnt/volume/m1/edge/server /mnt/volume/m1/endnode01/networkinfo trip=uplink > /proc/1/fd/1 2>&1
 ```
