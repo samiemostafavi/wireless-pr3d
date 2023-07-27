@@ -19,14 +19,15 @@ WORKDIR /etc/
 COPY uftpd.cfg /etc/uftpd.cfg
 RUN chown root:root /sbin/uFTP
 RUN chown root:root /etc/uftpd.cfg
-#RUN chmod -rwx /etc/uftpd.cfg
 RUN chmod +x /sbin/uFTP
 
 WORKDIR /tmp/
 COPY entrypoint.sh /tmp/entrypoint.sh
+COPY measure-upload.sh /tmp/measure-upload.sh
 COPY upload-files.py /tmp/upload-files.py
 COPY makeparquet.py /tmp/makeparquet.py
 COPY parquets-from-folders.py /tmp/parquets-from-folders.py
 COPY adv-mobile-info-recorder.py /tmp/adv-mobile-info-recorder.py
 RUN chmod +x /tmp/entrypoint.sh
+RUN chmod +x /tmp/measure-upload.sh
 ENTRYPOINT ["/tmp/entrypoint.sh"]

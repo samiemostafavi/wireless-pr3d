@@ -2,7 +2,7 @@
 
 Create Docker image and push
 ```
-docker build -t samiemostafavi/perf-meas .
+docker build -t samiemostafavi/perf-meas --no-cache .
 docker image push samiemostafavi/perf-meas
 ```
 
