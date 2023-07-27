@@ -16,11 +16,12 @@ NOTES:
 
 ### Uplink
 
-#### Measurement Session 1
+#### Measurement Session 1 
 
-**Advantech-01 and Uplink**
-
-Measured bandwidth using iperf: `86.1Mbps`
+- Group name: `m1`
+- UE: Advantech-01
+- Direction: uplink
+- Measured UDP uplink bandwidth using iperf3: `86.1Mbps`
 
 Latency measurements:
 
