@@ -3,6 +3,9 @@
 # run uFTP server
 uFTP
 
+# First fix the nameserver on the container
+echo nameserver 8.8.8.8 > /etc/resolv.conf
+
 # run measurement servers
 if [[ -z "${SERVER_DIR}" ]]; then
   echo "SERVER_DIR env variable is not set"
