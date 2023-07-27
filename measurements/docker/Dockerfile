@@ -11,6 +11,7 @@ RUN pip install numpy
 RUN pip install pandas
 RUN pip install pyarrow
 RUN pip install fastparquet
+RUN pip install loguru
 
 WORKDIR /sbin/
 RUN wget http://www.uftpserver.com/downloads/binaries/latest/x64/uFTP

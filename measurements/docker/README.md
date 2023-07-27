@@ -73,7 +73,7 @@ python3 /tmp/makeparquet.py /mnt/client/m1/client/cl_104232_55500_2023725_15730.
 
 Use this command to combine files on the client side and server side and make a parquet
 ```
-python3 /tmp/parquets-from-folders.py /mnt/client/results /mnt/client/m1/client /mnt/server/m1/server /mnt/client/m1/networkinfo trip=uplink device=adv01
+python3 parquets-from-folders.py testfiles/results testfiles/client testfiles/server testfiles/networkinfo trip=uplink
 ```
 
 # Upload files to Swift
