@@ -64,18 +64,6 @@ Inside perf-meas container, you can run
 python3 /tmp/adv-mobile-info-recorder.py 10s 100ms /mnt/client/m1/networkinfo http://10.10.5.1:50500 device=adv01
 ```
 
-# Upload files to Swift
-
-Use this command to upload file `/mnt/client/m1/networkinfo/adv01ul_20230718_173430.json.gz` to `m1` container in Swift.
-```
-AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 /tmp/upload-files.py /mnt/client/m1/networkinfo/adv01ul_20230718_173430.json.gz m1
-```
-
-Multiple `json.gz` files in folder `/mnt/client/m1/networkinfo/`:
-```
-for f in /mnt/client/m1/networkinfo/*.json.gz; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 /tmp/upload-files.py $f m1; done
-```
-
 # Make Parquet files
 
 Use this command to combine latency and network files and convert them to Parquet using Python script
@@ -86,4 +74,21 @@ python3 /tmp/makeparquet.py /mnt/client/m1/client/cl_104232_55500_2023725_15730.
 Use this command to combine files on the client side and server side and make a parquet
 ```
 python3 /tmp/parquets-from-folders.py /mnt/client/results /mnt/client/m1/client /mnt/server/m1/server /mnt/client/m1/networkinfo trip=uplink device=adv01
+```
+
+# Upload files to Swift
+
+First fix the nameserver on the container
+```
+echo nameserver 8.8.8.8 > /etc/resolv.conf
+```
+
+Use this command to upload file `/mnt/client/m1/networkinfo/adv01ul_20230718_173430.json.gz` to `m1` container in Swift.
+```
+AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 /tmp/upload-files.py /mnt/client/m1/networkinfo/adv01ul_20230718_173430.json.gz m1
+```
+
+Multiple `json.gz` files in folder `/mnt/client/m1/networkinfo/`:
+```
+for f in /mnt/client/m1/networkinfo/*.json.gz; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=samie AUTH_PASSWORD=password python3 /tmp/upload-files.py $f m1; done
 ```
