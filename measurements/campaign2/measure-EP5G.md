@@ -24,9 +24,9 @@ Measured uplink bandwidth: 86.1Mbps
 
 Run on the client container
 
-- ?Mbps, 2x44.5kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
+- 85.44Mbps, 2x44.5kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
 ```
-for i in `seq 1 4`; do (sleep 60 && irtt client --tripm=oneway -i 8300us -l 44500 -m 2 -d 1666s -o d --outdir=/tmp/m1/client --local=:55500 10.70.70.3) & (sleep 60 && python3 /tmp/adv-mobile-info-recorder.py 1666s 300ms /tmp/m1/networkinfo http://10.42.3.1:50500 device=adv01) & wait; done > /proc/1/fd/1 2>&1
+DEV_NAME=endnode01 NT_DEV=adv01 EXP_NAME=m1 SERVER_IP=10.70.70.3 ITNUM=4 SLEEP_DUR=60 TRIPM=oneway INTERVAL=8300us LENGTH=44500 MULT=2 DUR=1666s CL_PORT=55500 NT_SLEEP=300ms /tmp/measure-upload.sh > /proc/1/fd/1 2>&1
 ```
 
 - 61.44Mbps, 64kB packets, 120Hz, 8333 seconds (4x1666), 1e6 samples:
@@ -118,7 +118,7 @@ irtt client --tripm=oneway -i 2ms -l 40000 -d 10s 172.16.0.8
 
 ## Upload and processing the files
 
-On the endnode, upload files in the client and networkinfo folders:
+On the endnode, upload the produced files located at client and networkinfo folders:
 ```
 for file in /tmp/m1/client/*; do curl --user expeca:expeca --ftp-create-dirs -T ${file} ftp://10.70.70.3/mnt/volume/m1/endnode01/client/$(basename ${file}); done
 ```
@@ -128,5 +128,5 @@ for file in /tmp/m1/networkinfo/*; do curl --user expeca:expeca --ftp-create-dir
 
 At the edge, run the following to create parquet files
 ```
-python3 /tmp/parquets-from-folders.py /mnt/volume/m1/results /mnt/volume/m1/endnode01/client /mnt/volume/m1/edge/server /mnt/volume/m1/endnode01/networkinfo trip=uplink
+python3 /tmp/parquets-from-folders.py /mnt/volume/m1/results /mnt/volume/m1/endnode01/client /mnt/volume/m1/edge/server /mnt/volume/m1/endnode01/networkinfo trip=uplink > /proc/1/fd/1 2>&1
 ```
