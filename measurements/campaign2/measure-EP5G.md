@@ -14,7 +14,7 @@ NOTES:
 - Also, if the client does not change its port every time it is better. That is why `55500` is set as the port.
 - `> /proc/1/fd/1 2>&1` sends stdout and stderr to the container's main logs terminal.
 
-## Measurement Session 1 
+## Session 1 
 
 - Group name: `m1`
 - Device: `adv01`
