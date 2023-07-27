@@ -1,5 +1,5 @@
 FROM golang:1.19.3
-RUN go install github.com/samiemostafavi/nlmt/cmd/irtt@v0.9.12
+RUN go install github.com/samiemostafavi/nlmt/cmd/irtt@v0.9.13
 
 RUN apt-get update
 RUN apt-get install -y iperf3
