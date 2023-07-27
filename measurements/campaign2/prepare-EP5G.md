@@ -19,7 +19,7 @@ Volumes:
 
 ENV Variables, set SERVER_DIR, if it is measurement round 1 (m1)
 ```
-SERVER_DIR=/mnt/volume/m1/edge/server
+SERVER_DIR=/mnt/volume/
 ```
 
 Labels
@@ -40,7 +40,7 @@ No volumes
 
 ENV Variables, set SERVER_DIR, if it is measurement round 1 (m1)
 ```
-SERVER_DIR=/tmp/m1/server
+SERVER_DIR=/tmp/
 ```
 
 Labels
