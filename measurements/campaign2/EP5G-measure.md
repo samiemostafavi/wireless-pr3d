@@ -37,3 +37,12 @@ python3 /tmp/parquets-from-folders.py /mnt/volume/m1/results /mnt/volume/m1/endn
 ```
 for f in /mnt/volume/m1/results/*.parquet; do AUTH_SERVER=testbed.expeca.proj.kth.se AUTH_PROJECT_NAME=sdr-test-project AUTH_USERNAME=username AUTH_PASSWORD=password python3 /tmp/upload-files.py $f m1; done
 ```
+
+## Session 2
+
+- Group name: `m2`
+- Device `adv03`
+- Direction: `uplink`
+- Maximum throughput: `84.5Mbps`
+
+
