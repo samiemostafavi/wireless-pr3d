@@ -10,6 +10,8 @@ Create 1 volume for the edge server.
 
 ## Bring Up the edge server on Worker-01
 
+Image: `samiemostafavi/perf-meas`
+
 Networks:
 * Edge-Net (`10.70.70.0/24`)
 
