@@ -8,6 +8,7 @@ import time
 import warnings
 from os.path import abspath, dirname
 from pathlib import Path
+from statsmodels.graphics.tsaplots import plot_acf
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,23 +16,28 @@ import polars as pl
 from loguru import logger
 from pr3d.de import ConditionalGammaMixtureEVM, ConditionalGaussianMM
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import first
+from pyspark.sql.window import Window
+from pyspark.sql import functions as F
 
 warnings.filterwarnings("ignore")
 
 
-def parse_plot_parquet_args(argv: list[str]):
+def parse_plot_acf_args(argv: list[str]):
 
     # parse arguments to a dict
     args_dict = {}
     try:
         opts, args = getopt.getopt(
             argv,
-            "hd:p:l:t:",
+            "hd:p:l:t:s:a:",
             [
                 "dataset=",
                 "parquet=",
                 "label=",
-                "target="
+                "target=",
+                "taps=",
+                "num_samples="
             ],
         )
     except getopt.GetoptError:
@@ -53,6 +59,10 @@ def parse_plot_parquet_args(argv: list[str]):
             args_dict["label"] = arg
         elif opt in ("-t", "--target"):
             args_dict["target"] = arg
+        elif opt in ("-s", "--taps"):
+            args_dict["taps"] = int(arg)
+        elif opt in ("-a", "--samples"):
+            args_dict["num_samples"] = int(arg)
 
     return args_dict
 
@@ -65,7 +75,7 @@ def lookup_df(folder_path, parquet, spark):
 
     return df
 
-def run_plot_parquet_processes(exp_args: list):
+def run_plot_acf_processes(exp_args: list):
     logger.info(
         "Prepare models benchmark validate args "
         + f"with command line args: {exp_args}"
@@ -94,30 +104,39 @@ def run_plot_parquet_processes(exp_args: list):
     # inputs: exp_args["condition_nums"]
     df = lookup_df(dataset_project_path,exp_args["parquet"],spark)
 
-    # figure
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(25, 5))
+    # Check packet_multiply
+    # Get the first row of the DataFrame for packet multiply
+    first_row = df.first()
+    packet_multiply = first_row["packet_multiply"]
+    logger.info(f"Packet multiply: {packet_multiply}")
 
-    logger.info(f"Plotting dataframe")
-    total_count = df.count()
-
+    # get all measurements
     measurements = df.rdd.map(lambda x: x[exp_args["target"]]).collect()
+    time_series_data = np.array(measurements)/1e6
 
-    # plot measurements
-    nparr = np.array(measurements)
-    ax.bar(
-        range(total_count),
-        nparr/1e6,
-        label="delay measurements",
-        width=5,
-        snap=False
-    )
+    # limit the number of samples
+    time_series_data = time_series_data[:exp_args["num_samples"]]
 
-    ax.set_title(f"title")
-    ax.set_xlabel("time index")
-    ax.set_ylabel("delay [ms]")
+    if packet_multiply > 1:
+        # Skip the first (packet_multiply-1) samples, then take every packet_multiply samples from the time_series_data
+        time_series_data = time_series_data[packet_multiply-1::packet_multiply]
+
+    logger.info(f"Limited the number of samples for autocorrelation: {len(time_series_data)}")
+
+    # number of taps
+    num_taps = exp_args["taps"]
+
+    # Visualize autocorrelation
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(25, 5))
+    logger.info(f"Plotting ACF")
+
+    plot_acf(x=time_series_data, ax=ax, lags=num_taps)
+
+    ax.set_title(f"Autocorrelation")
+    ax.set_xlabel("Lag")
+    ax.set_ylabel("Autocorrelation")
     ax.grid()
-    ax.legend()
 
     # pdf figure
     fig.tight_layout()
-    fig.savefig(project_path + f"{exp_args['parquet']}_timeseries.png")
+    fig.savefig(project_path + f"{exp_args['parquet']}_acf.png")

@@ -13,3 +13,4 @@ isort
 codespell
 scipy
 petastorm
+statsmodels
