@@ -3,6 +3,9 @@
 # run uFTP server
 uFTP
 
+# run pfm server
+pfm > /proc/1/fd/1 2>&1 &
+
 # First fix the nameserver on the container
 echo nameserver 8.8.8.8 > /etc/resolv.conf
 

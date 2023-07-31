@@ -1,5 +1,6 @@
 FROM golang:1.19.3
 RUN go install github.com/samiemostafavi/nlmt/cmd/irtt@v0.9.14
+RUN go install github.com/samiemostafavi/perfmeas/cmd/pfm@latest
 
 RUN apt-get update
 RUN apt-get install -y iperf3
