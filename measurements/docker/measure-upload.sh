@@ -28,7 +28,7 @@ if [ "$DOWNLINK" = "true" ]; then
             (run_command_at_endnode "$SERVER_IP" "sleep $SLEEP_DUR && python3 /tmp/adv-mobile-info-recorder.py $DUR $NT_SLEEP $NT_OUT_DIR http://10.42.3.1:50500 device=$NT_DEV") &
             wait
             run_command_at_endnode "$SERVER_IP" "directory="$SE_OUT_DIR"; most_recent_file=\$(ls -t \$directory | grep -v '/$' | head -1); sefile=\$(readlink -f \$directory\$most_recent_file); curl --user expeca:expeca --ftp-create-dirs -T \${sefile} ftp://"$CLIENT_IP"/"$SE_OUT_DIR_FIN"/\$(basename \${sefile})"
-            run_command_at_endnode "$SERVER_IP" "directory="$NT_OUT_DIR"; most_recent_file=\$(ls -t \$directory | grep -v '/$' | head -1); ntfile=\$(readlink -f \$directory\$most_recent_file); curl --user expeca:expeca --ftp-create-dirs -T \${ntfile} ftp://"$CLIENT_IP"/"$NT_OUT_DIR_FIN"/\$(basename \${sefile})"
+            run_command_at_endnode "$SERVER_IP" "directory="$NT_OUT_DIR"; most_recent_file=\$(ls -t \$directory | grep -v '/$' | head -1); ntfile=\$(readlink -f \$directory\$most_recent_file); curl --user expeca:expeca --ftp-create-dirs -T \${ntfile} ftp://"$CLIENT_IP"/"$NT_OUT_DIR_FIN"/\$(basename \${ntfile})"
         )
     done
     
