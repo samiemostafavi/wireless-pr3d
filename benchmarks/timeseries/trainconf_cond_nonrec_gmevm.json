@@ -1,0 +1,26 @@
+{
+    "data" : {
+        "parquet_files" : "timeseries/r1ep5g_results/*.parquet",
+        "output_dir" : "timeseries/r1ep5g_results/trained_models",
+        "normalize" : true,
+        "standardize" : true,
+        "target_scale":1e-6,
+        "noise_variance":1
+    },
+    "model" : {
+        "modelname":"gmevm",
+        "recurrent_taps": 0,
+        "target_var":"delay_send",
+        "centers" : 4,
+        "conditions" : [
+            "netinfodata_CSQ"
+        ],
+        "batch_size" : 2048,
+        "num_training_samples" : 50000,
+        "model_config": [32,32,32],
+        "training_rounds" : [
+            {"learning_rate": 1e-3, "epochs":50},
+            {"learning_rate": 1e-4, "epochs":50}
+        ]
+    }
+}

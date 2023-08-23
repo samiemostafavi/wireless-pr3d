@@ -1,0 +1,12 @@
+{
+    "data" : {
+        "parquet_files" : "timeseries/r1ep5g_results/*.parquet",
+        "output_dir" : "timeseries/r1ep5g_results/evaluations",
+        "quantile_levels" : [0.9,0.99,0.999,0.9999],
+        "test_cases_num" : 800000
+    },
+    "model" : {
+        "h5_addr":"timeseries/r1ep5g_results/trained_models/model_230823141843_796856.h5",
+        "json_addr":"timeseries/r1ep5g_results/trained_models/model_230823141843_796856.json"
+    }
+}

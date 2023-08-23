@@ -1,4 +1,8 @@
+# README
 
+The scripts work by reading the configuration from a json file. Therefore, `CONF_FILE_ADDR` is a required env variable that must be set for running the scripts as below:
 ```
-python -m timeseries plot_acf -d r1ep5g -p 10-42-3-2_55500_20230726_171830 -l r1ts -t delay.send -a 50000
+CONF_FILE_ADDR=timeseries/trainconf_cond_rec_gmm.json python timeseries/train.py
+CONF_FILE_ADDR=timeseries/evalconf.json python timeseries/evaluate.py
 ```
+You can use `CPU_ONLY=true` as well to force the code ignore GPU.
