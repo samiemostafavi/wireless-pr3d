@@ -244,10 +244,6 @@ def plot_evaluation_main(exp_args):
     if exp_args["condition_nums"] is None:
         exp_args["condition_nums"] = [0]
 
-    models_abs = []
-    for mod in exp_args["models"]:
-        models_abs.append(mod.split(".")[1])
-    
     # read csvs inside
     for idx,cond_num in enumerate(exp_args["condition_nums"]):
         if not exp_args["single_plot"]:
@@ -280,8 +276,7 @@ def plot_evaluation_main(exp_args):
             for column in df:
                 if column == "y" or column == "tail.measurements":
                     continue
-                if column.split(".")[1] not in models_abs:
-                    print(column)
+                if column.split(".")[1]+'.'+column.split(".")[2] not in exp_args["models"]:
                     df.drop([column],axis=1,inplace=True)
 
 
@@ -298,13 +293,13 @@ def plot_evaluation_main(exp_args):
             )
 
         # take min, max, avg
-        for idy,model in enumerate(models_abs):
+        for idy,model in enumerate(exp_args["models"]):
             # find columns
             model_cols = []
             for column in df:
                 if column == "y" or column == "tail.measurements":
                     continue
-                if column.split(".")[1] == model:
+                if column.split(".")[1]+'.'+column.split(".")[2] == model:
                     model_cols.append(column)
 
             df[f"{model}.max"] = df[model_cols].quantile(0.95,axis=1)

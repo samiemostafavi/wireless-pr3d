@@ -6,8 +6,8 @@ from pathlib import Path
 # List of JSON file paths
 json_file_paths = [
     "timeseries/r1ep5g_results/evaluations/result_230823180213_286720.json",
-    "timeseries/r1ep5g_results/evaluations/result_230823141843_796856.json",
-    "timeseries/r1ep5g_results/evaluations/result_230823102952_699741.json"
+    "timeseries/r1ep5g_results/evaluations/result_230824141306_207723.json",
+    "timeseries/r1ep5g_results/evaluations/result_230824174555_251598.json"
 ]
 res_file_path = "timeseries/r1ep5g_results/evaluations/"
 
@@ -15,6 +15,7 @@ res_file_path = "timeseries/r1ep5g_results/evaluations/"
 baseline_values_list = []
 result_values_list = []
 errors_list = []
+ids = []
 
 # Read each JSON file and extract relevant data
 for json_path in json_file_paths:
@@ -32,13 +33,14 @@ for json_path in json_file_paths:
         baseline_values_list.append(baseline_values)
         result_values_list.append(result_values)
         errors_list.append(errors)
+        ids.append(data["id"])
 
 # Create the plot
 plt.figure(figsize=(10, 6))
 
 # Plot errors for each file
 for i in range(len(json_file_paths)):
-    plt.plot(baseline_values_list[i], errors_list[i], marker="o", label=f"File {i+1}")
+    plt.plot(baseline_values_list[i], errors_list[i], marker="o", label=f"ID: {ids[i]}")
 
 plt.xscale("log")  # Set x-axis to logarithmic scale
 plt.xlabel("Baseline (log scale)")
@@ -49,6 +51,7 @@ plt.title("Error in Log Scale")
 plt.gca().invert_xaxis()
 
 plt.grid(True)
+plt.legend()
 plt.tight_layout()
 
 # Show the plot

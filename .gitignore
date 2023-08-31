@@ -132,3 +132,4 @@ predictors
 *sparkcache*
 *trainparquets*
 *.zip
+*.h5

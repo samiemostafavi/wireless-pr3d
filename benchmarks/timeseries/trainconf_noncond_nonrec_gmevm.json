@@ -1,8 +1,8 @@
 {
     "data" : {
-        "parquet_files" : "timeseries/r1ep5g_results/*.parquet",
-        "output_dir" : "timeseries/r1ep5g_results/trained_models",
-        "normalize" : true,
+        "parquet_files" : "timeseries/newr1ep5g_results/s1s2s3/*.parquet",
+        "output_dir" : "timeseries/newr1ep5g_results/s1s2s3/trained_models",
+        "normalize" : false,
         "standardize" : true,
         "target_scale":1e-6,
         "noise_variance":1
@@ -10,14 +10,12 @@
     "model" : {
         "modelname":"gmevm",
         "recurrent_taps": 0,
-        "target_var":"delay_send",
         "centers" : 8,
-        "conditions" : [
-            "netinfodata_CSQ"
-        ],
-        "batch_size" : 16384,
-        "num_training_samples" : 500000,
-        "model_config": [32,32,32],
+        "target_var":"delay_send",
+        "conditions" : [],
+        "batch_size" : 8192,
+        "num_training_samples" : 1000000,
+        "model_config": {},
         "training_rounds" : [
             {"learning_rate": 1e-2, "epochs":100},
             {"learning_rate": 1e-3, "epochs":100},

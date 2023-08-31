@@ -10,4 +10,4 @@ You can use `CPU_ONLY=true` as well to force the code ignore GPU.
 
 # Traning durations
 
-14,059 parameters LSTM network took 4.5 hours to train. 
+14,059 parameters LSTM with 32,32,16,16 layers, 8 centers, gmevm, 300 epochs, 500k samples took 4.5 hours to train. 
