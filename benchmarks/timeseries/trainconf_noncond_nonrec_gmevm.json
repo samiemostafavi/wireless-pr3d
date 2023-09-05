@@ -5,10 +5,10 @@
         "normalize" : false,
         "standardize" : true,
         "target_scale":1e-6,
-        "noise_variance":1
+        "noise_variance":0.0001
     },
     "model" : {
-        "modelname":"gmevm",
+        "modelname":"gmm",
         "recurrent_taps": 0,
         "centers" : 8,
         "target_var":"delay_send",

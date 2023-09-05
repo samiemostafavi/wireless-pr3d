@@ -5,11 +5,10 @@ from pathlib import Path
 
 # List of JSON file paths
 json_file_paths = [
-    "timeseries/r1ep5g_results/evaluations/result_230823180213_286720.json",
-    "timeseries/r1ep5g_results/evaluations/result_230824141306_207723.json",
-    "timeseries/r1ep5g_results/evaluations/result_230824174555_251598.json"
+    "timeseries/newr1ep5g_results/s1s2s3/evaluations/result_230825151134_876091.json",
+    "timeseries/newr1ep5g_results/s1s2s3/evaluations/result_230831161655_456352.json",
 ]
-res_file_path = "timeseries/r1ep5g_results/evaluations/"
+res_file_path = "timeseries/newr1ep5g_results/s1s2s3/evaluations/"
 
 # Initialize lists to store baseline_values, result_values, and errors
 baseline_values_list = []

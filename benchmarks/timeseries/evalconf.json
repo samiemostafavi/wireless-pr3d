@@ -2,8 +2,8 @@
     "data" : {
         "parquet_files" : "timeseries/newr1ep5g_results/s1s2s3/*.parquet",
         "output_dir" : "timeseries/newr1ep5g_results/s1s2s3/evaluations",
-        "quantile_levels" : [0.9, 0.96406186, 0.9870845, 0.99535841, 0.9983319, 0.99940052, 0.99978456, 0.99992257, 0.99997217, 0.99999],
-        "test_cases_num" : 2000000,
+        "quantile_levels" : [0.5, 0.7, 0.9],
+        "test_cases_num" : 100000,
         "parallelize" : true
     },
     "model" : {

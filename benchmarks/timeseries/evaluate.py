@@ -1,6 +1,7 @@
 import os
 from os import environ
 from loguru import logger
+import builtins
 
 CPU_ONLY = False
 if environ.get('CPU_ONLY') is not None:
@@ -11,6 +12,11 @@ if environ.get('CPU_ONLY') is not None:
 
 if CPU_ONLY:
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+else:
+    import tensorflow as tf
+    physical_devices = tf.config.experimental.list_physical_devices('GPU')
+    assert len(physical_devices) > 0, "Not enough GPU hardware devices available"
+    config = tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 import random, json
 from os import environ
@@ -27,6 +33,7 @@ from scipy.stats import norm
 from scipy.optimize import root_scalar
 from pyspark.sql.functions import col, mean, randn, min, max, udf, isnan, isnull
 from pyspark.ml.feature import MinMaxScaler, VectorAssembler
+from pr3d.common.core import NonConditionalDensityEstimator,NonConditionalRecurrentDensityEstimator
 from pyspark.ml import Pipeline
 from pyspark.sql.types import DoubleType
 from pathlib import Path
@@ -58,8 +65,6 @@ def find_quantile_cond_rec_model(rmodel, Y, X, quantile_level, lower_bound=-20, 
 
     return np.array(quantile_values)
 
-def find_quantile_noncond_rec_model(model, X, quantile_level, lower_bound=-20, upper_bound=60):
-    pass
 
 def find_quantile_cond_nonrec_model(model, conditions_data_dict, quantile_level, lower_bound=-20, upper_bound=60):
     prediction_res = model._params_model.predict(
@@ -86,33 +91,101 @@ def find_quantile_cond_nonrec_model(model, conditions_data_dict, quantile_level,
         quantile_values.append(result.root)
 
     return np.array(quantile_values)
- 
 
-def find_quantile_noncond_nonrec_model(model, quantile_level, lower_bound=-20, upper_bound=60):
-    prediction_res = model._params_model.predict(
-        {"input":np.array([0])}
-    )
-    weights = np.array(prediction_res[0])
-    locs = np.array(prediction_res[1])
-    scales = np.array(prediction_res[2])
+
+def find_quantile_noncond_rec_model(model : NonConditionalRecurrentDensityEstimator, Y, quantile_level, lower_bound=-20, upper_bound=100):
 
     # Calculate the quantile values using numerical root-finding
-    def objective(x,weights,locs,scales):
-        cdf_values = np.sum(weights[:, np.newaxis] * norm.cdf(x, loc=locs[:, np.newaxis], scale=scales[:, np.newaxis]), axis=0)
-        return cdf_values - quantile_level
+    def objective(x,newY):
+        x = np.array([x,x])
+        pdf, logpdf, cdf = model.prob_batch(newY,x)
+        return cdf[0] - quantile_level
 
-    quantile_values = []
-    for i in range(len(weights)):
+    results = []
+    for rowY in Y:
+        newY = np.squeeze(rowY).tolist()
+        newY = np.array([newY,newY])
+        
         # Use root_scalar to find the quantile value that satisfies the objective
         result = root_scalar(
             objective,
             bracket=[lower_bound, upper_bound],
-            args=(weights[i], locs[i], scales[i]),
+            args=(newY),
             xtol=1e-2,
         )
-        quantile_values.append(result.root)
+        result = result.root
+        print(result)
 
-    return quantile_values[0]
+        pdf, logpdf, cdf = model.prob_batch(newY,np.array([result,result]))
+        print(f"quantile_level: {quantile_level}, result: {cdf[0]}")
+        results.append(result)
+
+    return results
+
+def new_find_quantile_noncond_rec_model(model : NonConditionalRecurrentDensityEstimator, Y, quantile_level, lower_bound=-10, upper_bound=40, divisions=128):
+
+    def find_quantile(rowY,x):
+        newY = np.expand_dims(rowY,axis=0)
+        newY = newY.tolist()
+        newY = np.repeat(newY, len(x), axis=0)
+        pdf, logpdf, cdf = model.prob_batch(newY,x,batch_size=len(x))
+        def positivediff(inp):
+            if quantile_level - inp >= 0:
+                return quantile_level - inp
+            else:
+                return 100000
+        def negativediff(inp):
+            if quantile_level - inp >= 0:
+                return 100000
+            else:
+                return inp - quantile_level
+        
+        cdf = cdf.tolist()
+        cdfneg = builtins.min(cdf, key=positivediff)
+        resultneg = x[cdf.index(cdfneg)]
+        cdfpos = builtins.min(cdf, key=negativediff)
+        resultpos = x[cdf.index(cdfpos)]
+        return resultneg, resultpos
+
+    results = []
+    for rowY in Y:
+        x = np.linspace(start=lower_bound,stop=upper_bound,num=divisions)
+        resultneg,resultpos = find_quantile(rowY,x)
+        #x = np.linspace(start=resultneg,stop=resultpos,num=divisions)
+        #resultneg,resultpos = find_quantile(rowY,x)
+        #print(resultneg)
+        #print(resultpos)
+        
+        result = (resultpos + resultneg)/2.0
+        results.append(result)
+
+        #newY = np.squeeze(rowY).tolist()
+        #newY = np.array([newY,newY])
+        #pdf, logpdf, cdf = model.prob_batch(newY,np.array([result,result]))
+        #print(f"result: {result}, quantile_level: {quantile_level}, result: {cdf[0]}")
+
+    return results
+
+def find_quantile_noncond_nonrec_model(model : NonConditionalDensityEstimator, quantile_level, lower_bound=-20, upper_bound=60):
+
+    # Calculate the quantile values using numerical root-finding
+    def objective(x):
+        pdf, logpdf, cdf = model.prob_batch(np.expand_dims(np.array([x,x]),axis=1))
+        return cdf[0] - quantile_level
+
+    # Use root_scalar to find the quantile value that satisfies the objective
+    result = root_scalar(
+        objective,
+        bracket=[lower_bound, upper_bound],
+        xtol=1e-2,
+    )
+    result = result.root
+    #print(result)
+
+    #pdf, logpdf, cdf = model.prob_batch(np.expand_dims(np.array([result,result]),axis=1))
+    #print(f"quantile_level: {quantile_level}, result: {cdf[0]}")
+
+    return result
 
 def eval_model(process_inp):
     from pr3d.de import ConditionalRecurrentGaussianMM,ConditionalGaussianMM,ConditionalRecurrentGaussianMixtureEVM,RecurrentGaussianMM,RecurrentGaussianMEVM,GaussianMM,ConditionalGaussianMixtureEVM,GaussianMixtureEVM
@@ -241,20 +314,23 @@ def eval_model(process_inp):
     if recurrent:
         if conditional:
             quantile_vals = find_quantile_cond_rec_model(model,Y,X,quantile_level)
-            res = np.sum(y > quantile_vals)/float(test_cases_num)
-            logger.info("quantile: {:1.2e}, result: {:1.2e}".format(1-quantile_level, res))
         else:
-            pass
+            quantile_vals = new_find_quantile_noncond_rec_model(model,Y,quantile_level)
+
+        #print(y)
+        #print(quantile_vals)
+        res = np.sum(y > quantile_vals)/float(test_cases_num)
+        logger.info("quantile: {:1.2e}, result: {:1.2e}".format(1-quantile_level, res))
+
     else:
         if conditional:
             # calc quantile mdn
             quantile_vals = find_quantile_cond_nonrec_model(model,X,quantile_level)
-            res = np.sum(Y > quantile_vals)/float(test_cases_num)
-            logger.info("quantile: {:1.2e}, result: {:1.2e}".format(1-quantile_level, res))
         else:
-            quantile_val = find_quantile_noncond_nonrec_model(model,quantile_level)
-            res = np.sum(Y > quantile_val)/float(test_cases_num)
-            logger.info("quantile: {:1.2e}, result: {:1.2e}".format(1-quantile_level, res))
+            quantile_vals = find_quantile_noncond_nonrec_model(model,quantile_level)
+
+        res = np.sum(Y > quantile_vals)/float(test_cases_num)
+        logger.info("quantile: {:1.2e}, result: {:1.2e}".format(1-quantile_level, res))
 
     return res
 

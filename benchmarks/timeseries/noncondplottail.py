@@ -44,16 +44,15 @@ spark = (
 )
 
 parquet_groups = [
-    "timeseries/newr1ep5g_results/s10/*.parquet",
-    "timeseries/newr1ep5g_results/s19/*.parquet",
+    "timeseries/newr1ep5g_results/s1s2s3/*.parquet",
     #"timeseries/newr1ep5g_results/s4/*.parquet",
     #"timeseries/newr1ep5g_results/s7/*.parquet",
 ]
-result_file = "timeseries/newr1ep5g_results/s10-s19-tail.png"
+result_file = "timeseries/newr1ep5g_results/tail4.png"
 
-model_h5_addr = "timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230825151134_876091.h5"
-model_json_addr = "timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230825151134_876091.json"
-plot_model = False
+model_h5_addr = "timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230905100956_099812.h5"
+model_json_addr = "timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230905100956_099812.json"
+plot_model = True
 
 if plot_model:
     # opening model and data configuration
