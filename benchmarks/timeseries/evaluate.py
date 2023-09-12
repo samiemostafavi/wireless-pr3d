@@ -346,7 +346,7 @@ def eval_model(process_inp):
         res = np.sum(Y > quantile_vals)/float(test_cases_num)
         logger.info("quantile: {:1.2e}, result: {:1.2e}".format(1-quantile_level, res))
 
-    return res
+    return 1.00 - res
 
 if __name__ == '__main__':
 
