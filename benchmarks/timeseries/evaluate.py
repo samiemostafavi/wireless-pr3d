@@ -38,6 +38,20 @@ from pyspark.ml import Pipeline
 from pyspark.sql.types import DoubleType
 from pathlib import Path
 from pyspark.sql import SparkSession
+from datetime import datetime
+
+def get_yymmddhhmmss():
+    now = datetime.now()
+    year = str(now.year)[-2:]  # Taking the last two digits of the year
+    month = str(now.month).zfill(2)
+    day = str(now.day).zfill(2)
+    hour = str(now.hour).zfill(2)
+    minute = str(now.minute).zfill(2)
+    seconds = str(now.second).zfill(2)
+    milliseconds = str(now.microsecond // 1000).zfill(3)  # Milliseconds part
+    microseconds = str(now.microsecond % 1000).zfill(3)  # Microseconds part
+    
+    return f"{year}{month}{day}{hour}{minute}{seconds}_{milliseconds}{microseconds}"
 
 def find_quantile_cond_rec_model(rmodel, Y, X, quantile_level, lower_bound=-20, upper_bound=60):
     prediction_res = rmodel._params_model.predict(
@@ -359,7 +373,8 @@ if __name__ == '__main__':
     output_dir = conf["data"]["output_dir"]
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
-    filename = "result_" + modelid_str
+    resultid_str = get_yymmddhhmmss()
+    filename = "result_" + resultid_str
 
     orig_target_var = model_info["target_var"]
     recurrent = (True if model_info["recurrent_taps"] > 0 else False)
@@ -501,6 +516,8 @@ if __name__ == '__main__':
             result = eval_model(dict_arr[idx])
             results_dict[str(quantile_levels[idx])] = result
 
+
+
     # save json file
     with open(
         output_path / (filename + ".json"),
@@ -508,9 +525,13 @@ if __name__ == '__main__':
         encoding="utf-8",
     ) as f:
         f.write(json.dumps({
-            "id": modelid_str,
+            "id": resultid_str,
             "result": results_dict,
-            **conf
+            "data": conf["data"],
+            "model":{
+                "id":modelid_str,
+                **conf["model"]
+            }
         }, indent = 4))
 
     logger.info(f"Evaluation results saved to {filename} file.")

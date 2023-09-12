@@ -1,13 +1,13 @@
 {
     "data" : {
-        "parquet_files" : "timeseries/newr1ep5g_results/s1s2s3/*.parquet",
-        "output_dir" : "timeseries/newr1ep5g_results/s1s2s3/evaluations",
+        "parquet_files" : "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_140652.parquet",
+        "output_dir" : "timeseries/newr1ep5g_results/s1/evaluations",
         "quantile_levels" : [0.5, 0.7, 0.9],
-        "test_cases_num" : 100000,
+        "test_cases_num" : 10000,
         "parallelize" : true
     },
     "model" : {
-        "h5_addr":"timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230825151134_876091.h5",
-        "json_addr":"timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230825151134_876091.json"
+        "h5_addr":"timeseries/newr1ep5g_results/s1/trained_models/model_230912083511_248506.h5",
+        "json_addr":"timeseries/newr1ep5g_results/s1/trained_models/model_230912083511_248506.json"
     }
 }

@@ -22,7 +22,6 @@ from pyspark.sql.functions import col, mean, randn, min, max, udf, isnan, isnull
 from pyspark.ml.feature import MinMaxScaler, VectorAssembler
 from pyspark.ml import Pipeline
 from pyspark.sql.types import DoubleType
-
 from datetime import datetime
 
 def get_yymmddhhmmss():
@@ -114,8 +113,9 @@ if standardize:
     df = df.withColumn(target_var+'_noisy', col(target_var+'_standard') + (randn(seed=noise_seed)*noise_variance))
     means_dict["standardized"] = {
         target_var:{
-            "mean":target_mean,
-            "scale":target_scale
+            "mean": target_mean,
+            "scale": target_scale,
+            "noise_variance": noise_variance,
         }
     }
     target_var = target_var+'_noisy'
@@ -251,13 +251,11 @@ if recurrent:
             model = RecurrentGaussianMEVM(
                 centers=centers,
                 recurrent_taps=recurrent_taps,
-                recurrent_layer_size=model_config,
             )
         elif modelname=="gmm":
             model = RecurrentGaussianMM(
                 centers=centers,
                 recurrent_taps=recurrent_taps,
-                recurrent_layer_size=model_config,
             )
         else:
             raise Exception("wrong model")

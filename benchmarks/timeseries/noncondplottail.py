@@ -33,6 +33,12 @@ from pathlib import Path
 from pyspark.sql import SparkSession
 import pandas as pd
 from pr3d.de import ConditionalRecurrentGaussianMM,ConditionalGaussianMM,ConditionalRecurrentGaussianMixtureEVM,RecurrentGaussianMM,RecurrentGaussianMEVM,GaussianMM,ConditionalGaussianMixtureEVM,GaussianMixtureEVM
+from matplotlib.lines import Line2D
+
+import scienceplots
+plt.style.use(['science','ieee'])
+
+from datetime import datetime
 
 spark = (
     SparkSession.builder.master("local")
@@ -44,15 +50,61 @@ spark = (
 )
 
 parquet_groups = [
-    "timeseries/newr1ep5g_results/s1s2s3/*.parquet",
-    #"timeseries/newr1ep5g_results/s4/*.parquet",
-    #"timeseries/newr1ep5g_results/s7/*.parquet",
+    "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_114214.parquet",
+    "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_121110.parquet",
+    "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_124005.parquet",
+    "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_130901.parquet",
+    "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_133756.parquet",
+    "timeseries/newr1ep5g_results/s1/10-42-3-2_55500_20230809_140652.parquet",
+    "timeseries/newr1ep5g_results/s10/10-70-70-3_55500_20230816_110947.parquet",
+    "timeseries/newr1ep5g_results/s10/10-70-70-3_55500_20230816_113841.parquet",
+    "timeseries/newr1ep5g_results/s10/10-70-70-3_55500_20230816_120736.parquet",
+    "timeseries/newr1ep5g_results/s10/10-70-70-3_55500_20230816_123630.parquet",
+    "timeseries/newr1ep5g_results/s10/10-70-70-3_55500_20230816_130524.parquet",
+    "timeseries/newr1ep5g_results/s10/10-70-70-3_55500_20230816_133419.parquet",
 ]
-result_file = "timeseries/newr1ep5g_results/tail4.png"
+parquet_labels = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+]
+darker = 0.9
+parquet_color_pallete = [
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.1*darker,0.2*darker,0.8*darker, 1],
+    [0.9*darker,0.4*darker,0.0*darker, 1],
+    [0.9*darker,0.4*darker,0.0*darker, 1],
+    [0.9*darker,0.4*darker,0.0*darker, 1],
+    [0.9*darker,0.4*darker,0.0*darker, 1],
+    [0.9*darker,0.4*darker,0.0*darker, 1],
+    [0.9*darker,0.4*darker,0.0*darker, 1],
+]
+parquet_line = '-'
+
+custom_legend_items = ['Uplink', 'Downlink']
+custom_legend_lines = [Line2D([0], [0], color=[0.1*darker,0.2*darker,0.8*darker, 1], lw=4),
+                Line2D([0], [0], color=[0.9*darker,0.4*darker,0.0*darker, 1], lw=4)]
+
+
+result_file = "timeseries/newr1ep5g_results/expecapaper.png"
+
 
 model_h5_addr = "timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230905100956_099812.h5"
 model_json_addr = "timeseries/newr1ep5g_results/s1s2s3/trained_models/model_230905100956_099812.json"
-plot_model = True
+plot_model = False
 
 if plot_model:
     # opening model and data configuration
@@ -62,7 +114,7 @@ if plot_model:
         model_info = loaded_dict["model"]
         model_data_info = loaded_dict["data"]
 
-tail_fig, tail_ax = plt.subplots(nrows=1, ncols=1)
+tail_fig, tail_ax = plt.subplots(nrows=1, ncols=1,  figsize=(7/2.5, 5/2.5))
 for idx,parquet_files in enumerate(parquet_groups):
 
     df = spark.read.parquet(parquet_files)
@@ -71,12 +123,26 @@ for idx,parquet_files in enumerate(parquet_groups):
     logger.info(f"Total number of samples in this empirical dataset: {total_count}")
 
     #change column name, replace . with _
+    column_names = []
     for mcol in df.columns:
-        df = df.withColumnRenamed(mcol, mcol.replace(".", "_"))
+        newcol = mcol.replace(".", "_")
+        df = df.withColumnRenamed(mcol, newcol)
+        column_names.append(newcol)
+    logger.info(f"column names: {column_names}")
 
     key_label = "delay_send"
     target_scale = 1e-6
-    y_points = [0,100,30]
+    y_points = [2.5,100,18]
+
+    first_timestamp=df.head().timestamps_client_send_wall
+    # Convert nanoseconds to seconds
+    timestamp_s = int(first_timestamp) / 1e9  # 1e9 nanoseconds = 1 second
+
+    # Convert to datetime object
+    dt_object = datetime.fromtimestamp(timestamp_s)
+
+    # Print the datetime object in a human-readable format
+    logger.info(f"Date and Time of recording this dataset: {dt_object.strftime('%Y-%m-%d %H:%M:%S')}")
 
     # remove non latency values
     df = df.filter(
@@ -133,7 +199,7 @@ for idx,parquet_files in enumerate(parquet_groups):
         num=y_points[1],
     )
 
-    prob_lims = [1,1e-5]
+    prob_lims = [1e-4, 1]
 
     logger.info(f"Plotting dataframe")
 
@@ -151,7 +217,9 @@ for idx,parquet_files in enumerate(parquet_groups):
     ax.plot(
         y_points,
         np.float64(1.00)-np.array(emp_cdf,dtype=np.float64),
-        label=f"{idx}",
+        label=f"{parquet_labels[idx]}",
+        color=parquet_color_pallete[idx],
+        linestyle=parquet_line,
     )
 
     if plot_model:
@@ -178,10 +246,11 @@ for idx,parquet_files in enumerate(parquet_groups):
         )
 
 ax.set_yscale('log')
-#ax.set_ylim(prob_lims[0],prob_lims[1])             
+ax.set_ylim(prob_lims[0],prob_lims[1])             
 ax.set_xlabel("Link delay [ms]")
-ax.set_ylabel("Tail probability")
-ax.grid()
-ax.legend()
+ax.set_ylabel("Complementary CDF")
+ax.grid(True, which="both", ls="-")
+#ax.legend()
+ax.legend(custom_legend_lines, custom_legend_items)
 
 tail_fig.savefig(result_file)

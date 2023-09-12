@@ -1,0 +1,25 @@
+{
+    "data" : {
+        "parquet_files" : "timeseries/newr1ep5g_results/s1/*.parquet",
+        "output_dir" : "timeseries/newr1ep5g_results/s1/trained_models",
+        "normalize" : false,
+        "standardize" : true,
+        "target_scale":1e-6,
+        "noise_variance":0.0001
+    },
+    "model" : {
+        "modelname":"gmm",
+        "recurrent_taps": 32,
+        "centers" : 8,
+        "target_var":"delay_send",
+        "conditions" : [],
+        "batch_size" : 4096,
+        "num_training_samples" : 900000,
+        "model_config": {},
+        "training_rounds" : [
+            {"learning_rate": 1e-2, "epochs":110},
+            {"learning_rate": 1e-3, "epochs":110},
+            {"learning_rate": 1e-4, "epochs":110}
+        ]
+    }
+}

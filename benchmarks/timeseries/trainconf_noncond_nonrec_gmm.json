@@ -1,7 +1,7 @@
 {
     "data" : {
-        "parquet_files" : "timeseries/newr1ep5g_results/s1s2s3/*.parquet",
-        "output_dir" : "timeseries/newr1ep5g_results/s1s2s3/trained_models",
+        "parquet_files" : "timeseries/newr1ep5g_results/s1/*.parquet",
+        "output_dir" : "timeseries/newr1ep5g_results/s1/trained_models",
         "normalize" : false,
         "standardize" : true,
         "target_scale":1e-6,
@@ -14,7 +14,7 @@
         "target_var":"delay_send",
         "conditions" : [],
         "batch_size" : 8192,
-        "num_training_samples" : 1000000,
+        "num_training_samples" : 900000,
         "model_config": {},
         "training_rounds" : [
             {"learning_rate": 1e-2, "epochs":100},
