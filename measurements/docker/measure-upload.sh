@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Example (uplink):
-# DEV_NAME=endnode01 NT_DEV=adv01 EXP_NAME=m1 SERVER_IP=10.70.70.3 ITNUM=4 SLEEP_DUR=60 TRIPM=oneway INTERVAL=8300us LENGTH=44500 MULT=2 DUR=1666s CL_PORT=55500 NT_SLEEP=300ms /tmp/measure-upload.sh > /proc/1/fd/1 2>&1
+# DEV_NAME=endnode01 NT_DEV=adv01 EXP_NAME=m1 SERVER_IP=10.70.70.3 ITNUM=4 SLEEP_DUR=60 TRIPM=oneway INTERVAL=10ms INTERVAL_OFFSET=2ms LENGTH=44500 MULT=2 DUR=1666s CL_PORT=55500 NT_SLEEP=300ms /tmp/measure-upload.sh > /proc/1/fd/1 2>&1
 
 # Example (downlink):
-# DOWNLINK=true EDGE_NAME=edge END_NAME=endnode01 NT_DEV=adv01 EXP_NAME=m1 SERVER_IP=172.16.0.40 CLIENT_IP=10.70.70.3 ITNUM=4 SLEEP_DUR=60 TRIPM=oneway INTERVAL=8300us LENGTH=44500 MULT=2 DUR=1666s CL_PORT=55500 NT_SLEEP=300ms /tmp/measure-upload.sh > /proc/1/fd/1 2>&1
+# DOWNLINK=true EDGE_NAME=edge END_NAME=endnode01 NT_DEV=adv01 EXP_NAME=m1 SERVER_IP=172.16.0.40 CLIENT_IP=10.70.70.3 ITNUM=4 SLEEP_DUR=60 TRIPM=oneway INTERVAL=10ms INTERVAL_OFFSET=2ms LENGTH=44500 MULT=2 DUR=1666s CL_PORT=55500 NT_SLEEP=300ms /tmp/measure-upload.sh > /proc/1/fd/1 2>&1
 
 
 run_command_at_endnode() {
@@ -24,7 +24,7 @@ if [ "$DOWNLINK" = "true" ]; then
     NT_OUT_DIR_FIN=/mnt/volume/$EXP_NAME/$END_NAME/networkinfo/
     for i in $(seq 1 $ITNUM); do
         (
-            (sleep $SLEEP_DUR && irtt client --tripm=$TRIPM -i $INTERVAL -g $EXP_NAME/$END_NAME -l $LENGTH -m $MULT -d $DUR -o d --outdir=$CL_OUT_DIR --local=:$CL_PORT $SERVER_IP) &
+            (sleep $SLEEP_DUR && irtt client --tripm=$TRIPM -i $INTERVAL -f $INTERVAL_OFFSET -g $EXP_NAME/$END_NAME -l $LENGTH -m $MULT -d $DUR -o d --outdir=$CL_OUT_DIR --local=:$CL_PORT $SERVER_IP) &
             (run_command_at_endnode "$SERVER_IP" "sleep $SLEEP_DUR && python3 /tmp/adv-mobile-info-recorder.py $DUR $NT_SLEEP $NT_OUT_DIR http://10.42.3.1:50500 device=$NT_DEV") &
             wait
             run_command_at_endnode "$SERVER_IP" "directory="$SE_OUT_DIR"; most_recent_file=\$(ls -t \$directory | grep -v '/$' | head -1); sefile=\$(readlink -f \$directory\$most_recent_file); curl --user expeca:expeca --ftp-create-dirs -T \${sefile} ftp://"$CLIENT_IP"/"$SE_OUT_DIR_FIN"/\$(basename \${sefile})"
