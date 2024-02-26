@@ -1,4 +1,4 @@
-import asyncio, json
+import asyncio, json, os, sys
 from loguru import logger
 from datetime import datetime, timedelta
 import pandas as pd
@@ -8,6 +8,9 @@ from api.influx import InfluxClient
 import tensorflow as tf
 from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
 
+
+logger.remove()
+logger.add(sys.stderr, level="INFO")
 
 # main conf path
 CONF_PATH = 'conf.json'
