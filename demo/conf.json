@@ -1,0 +1,31 @@
+{
+	"influxdb": {
+		"url" : "http://localhost:8086",
+		"token" : "jZHmjPtn9Q-Z0U8j0wxdo7ATKKHD0ofOMNqfkXvbB-hbnHahU2NDXLh0DHOZ-Kd_Ncwtixh2xdNJncFKm42Pmg==",
+		"org" : "expeca",
+		"bucket" : "latency",
+		"read_point_name" : "packet_records"
+	},
+	"ml_model": {
+	    "sleep_dur": 1.0,
+	    "type": "gmm",
+	    "bayesian": false,
+	    "scale":10,
+	    "centers": 4,
+	    "y_points": [0,1,10],
+	    "hidden_sizes" : [],
+	    "condition_labels" : [],
+	    "y_label" : "e2e_delay",
+	    "write_point_name" : "predictions",
+	    "training_params": {
+		"dataset_size": 5000,
+		"batch_size": 2500,
+		"rounds" : [
+		    {"learning_rate": 1e-2, "epochs":200},
+		    {"learning_rate": 1e-3, "epochs":400},
+		    {"learning_rate": 1e-4, "epochs":400},
+		    {"learning_rate": 1e-5, "epochs":400}
+		]
+	    }
+	}
+}

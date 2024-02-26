@@ -1,0 +1,5 @@
+numpy==1.23.3
+pandas==1.5.0
+git+https://github.com/samiemostafavi/pr3d.git
+influxdb-client
+loguru
