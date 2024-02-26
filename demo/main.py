@@ -118,9 +118,18 @@ async def fetchnlearn(client : InfluxClient, ml_model_conf : dict):
 
 async def main():
 
-    # load training config
-    with open(CONF_PATH) as json_file:
-        config = json.load(json_file)
+    # get standalone env variable
+    config_file_path = os.environ.get("CONFIG_FILE_PATH")
+    if config_file_path is not None:
+        logger.info(f"Loading config from {config_file_path}")
+        with open(config_file_path) as json_file:
+            config = json.load(json_file)
+    else:
+        # load config from default path
+        logger.info("Loading config from default path")
+        with open(CONF_PATH) as json_file:
+            config = json.load(json_file)
+
     logger.info(
         f"Params: \n {config}"
     )
