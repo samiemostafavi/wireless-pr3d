@@ -7,6 +7,10 @@
 		"read_point_name" : "packet_records"
 	},
 	"ml_model": {
+	    "dataset_dur": {
+                "minutes": 10,
+                "seconds": 0
+            },
 	    "sleep_dur": 1.0,
 	    "type": "gmm",
 	    "bayesian": false,

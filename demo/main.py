@@ -23,7 +23,10 @@ async def fetchnlearn(client : InfluxClient, ml_model_conf : dict):
             await asyncio.sleep(float(ml_model_conf["sleep_dur"]))
 
             # fetch data
-            df_train = client.get_latest_samples_num(ml_model_conf["training_params"]["dataset_size"])
+            if "dataset_dur" in ml_model_conf:
+                df_train = client.get_recent_samples_dur(timedelta(minutes=ml_model_conf["dataset_dur"]["minutes"],seconds=ml_model_conf["dataset_dur"]["seconds"]))
+            else:
+                df_train = client.get_latest_samples_num(ml_model_conf["training_params"]["dataset_size"])
             if len(df_train) < ml_model_conf["training_params"]["dataset_size"]:
                 logger.warning(f'Requested number of samples: {ml_model_conf["training_params"]["dataset_size"]}, received: {len(df_train)}')
                 continue
