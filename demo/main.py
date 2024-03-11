@@ -97,8 +97,8 @@ async def fetchnlearn(client : InfluxClient, ml_model_conf : dict):
             
             # make predictions and push them to the database
             y_points_standard = np.linspace(
-                start=y_points[0]*key_scale-(key_mean*key_scale),
-                stop=y_points[1]*key_scale-(key_mean*key_scale),
+                start=y_points[0], #*key_scale-(key_mean*key_scale)
+                stop=y_points[1], #*key_scale-(key_mean*key_scale)
                 num=y_points[2],
             )
             # define y numpy list
