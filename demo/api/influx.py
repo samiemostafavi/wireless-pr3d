@@ -47,7 +47,10 @@ class InfluxClient:
             column_values = []
             for record in table.records:
                 column_values.append(record.get_value())
-            df[column_name] = column_values
+            if len(df) > 0:
+                df[column_name] = column_values[:len(df)]
+            else:
+                df[column_name] = column_values
 
         # add time
         if query_result:
@@ -56,7 +59,10 @@ class InfluxClient:
             for record in query_result[0].records:
                 ts = datetime.timestamp(record.get_time())
                 column_values.append(ts)
-            df[column_name] = column_values
+            if len(df) > 0:
+                df[column_name] = column_values[:len(df)]
+            else:
+                df[column_name] = column_values
 
         logger.debug(f"Received query results:\n{df}")
         return df
