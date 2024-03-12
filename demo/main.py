@@ -1,42 +1,44 @@
-import asyncio, json, os, sys, threading
+import json, os, sys, threading, copy, time
+import traceback
+import multiprocessing
+import multiprocessing.context as ctx
 from loguru import logger
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
 
-from api.influx import InfluxClient
-import tensorflow as tf
-from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
 
+# very important line to make tensorflow run in sub processes
+ctx._force_start_method("spawn")
+# disable GPU
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
 
 # main conf path
 CONF_PATH = 'conf.json'
+MODEL_JSON = '.model.json'
+MODEL_H5 = '.model.h5'
 
-class LatestModel:
-    def __init__(self):
-        self._model = None
-        self._mean = None
-        self.lock = threading.Lock()
+# create files if dont exist
+if not os.path.exists(MODEL_H5):
+    os.mknod(MODEL_H5)
+if not os.path.exists(MODEL_JSON):
+    os.mknod(MODEL_JSON)
 
-    def set(self, model, mean):
-        with self.lock:
-            self._model = model
-            self._mean = mean
+def fetchnlearn(influx_config : dict, ml_model_conf : dict):
+    from api.influx import InfluxClient
+    import tensorflow as tf
+    from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
 
-    def get(self):
-        with self.lock:
-            return self._model, self._mean
-            
-
-async def fetchnlearn(client : InfluxClient, ml_model_conf : dict, l_model : LatestModel):
-
+    logger.info("Strating fetch and learn thread")
+    
+    # connect to influxDB
+    client = InfluxClient(influx_config["url"], influx_config["token"], influx_config["bucket"], influx_config["org"], influx_config["read_point_name"])
+    
     try:
         while True:
-
-            await asyncio.sleep(float(ml_model_conf["sleep_dur_learn"]))
 
             # fetch data
             if "dataset_dur" in ml_model_conf:
@@ -111,31 +113,56 @@ async def fetchnlearn(client : InfluxClient, ml_model_conf : dict, l_model : Lat
                     verbose=0,
                 )
 
-            # save the model for push
-            l_model.set(model, key_mean)
+            # training done, save the model
+            model_conf = {"key_mean":key_mean, "type":model_type, "key_scale":key_scale}
+            model.save(MODEL_H5)
+            with open(MODEL_JSON, "w") as write_file:
+                json.dump(model_conf, write_file, indent=4)
+            
+            logger.info("model trained and saved")
+            time.sleep(float(ml_model_conf["sleep_dur_learn"]))
 
-    except asyncio.CancelledError:
-        pass
+    except Exception as e:
+        logger.error(traceback.format_exc())
     finally:
         logger.warning(f"[live learning server] Stopping fetch and learn task")
 
 
-async def pushtodb(client : InfluxClient, ml_model_conf : dict, l_model : LatestModel):
+def pushtodb(influx_config : dict, ml_model_conf : dict):
+    from api.influx import InfluxClient
+    import tensorflow as tf
+    from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
+
+    logger.info("Strating push to db thread")
+
+    # connect to influxDB
+    client = InfluxClient(influx_config["url"], influx_config["token"], influx_config["bucket"], influx_config["org"], influx_config["read_point_name"])
+
+    y_points = ml_model_conf["y_points"]
+    write_point_name = ml_model_conf["write_point_name"]
 
     try:
         while True:
-
-            await asyncio.sleep(float(ml_model_conf["sleep_dur_dbpush"]))
-
-            y_points = ml_model_conf["y_points"]
-            write_point_name = ml_model_conf["write_point_name"]
-            key_scale = np.float64(ml_model_conf["scale"])
-
             # get the trained model if available
-            model, key_mean = l_model.get()
+            with open(MODEL_JSON, 'r') as f:
+                try:
+                    info_dict = json.load(f)
+                    key_mean = float(info_dict["key_mean"])
+                    key_scale = float(info_dict["key_scale"])
+                    model_type = info_dict["type"]
+                    if model_type == "gmm":
+                        model = GaussianMM(h5_addr=MODEL_H5)
+                    elif model_type == "gmevm":
+                        model = GaussianMixtureEVM(h5_addr=MODEL_H5)
+                    else:
+                        model = None
+                except:
+                    model = None
             if not model:
+                logger.warning("no model available to push")
+                time.sleep(float(ml_model_conf["sleep_dur_dbpush"]))
                 continue
-            
+
             # make predictions and push them to the database
             y_points_standard = np.linspace(
                 start=y_points[0], #*key_scale-(key_mean*key_scale)
@@ -152,17 +179,20 @@ async def pushtodb(client : InfluxClient, ml_model_conf : dict, l_model : Latest
                 'logprob': logprob, 
                 'cdf': cdf,
                 'ccdf' : 1.0-cdf,
-                #'logccdf' : np.log10(1.0-cdf)
+                'logccdf' : np.log10(1.0-cdf)
             })
             logger.debug(f"prediction result:\n{res_df}")
             client.push_dataframe(res_df, write_point_name)
+            logger.info(f"Pushed a model to db")
 
-    except asyncio.CancelledError:
-        pass
+            time.sleep(float(ml_model_conf["sleep_dur_dbpush"]))
+
+    except Exception as e:
+        logger.error(traceback.format_exc())
     finally:
-        logger.warning(f"[push to db server] Stopping push to db task")
+        logger.warning(f"[live learning server] Stopping fetch and learn task")
 
-async def main():
+def main():
 
     # get standalone env variable
     config_file_path = os.environ.get("CONFIG_FILE_PATH")
@@ -182,35 +212,25 @@ async def main():
     ml_model_conf = config["ml_model"]
     influx_config = config["influxdb"]
 
-    # connect to influxDB
-    client = InfluxClient(influx_config["url"], influx_config["token"], influx_config["bucket"], influx_config["org"], influx_config["read_point_name"])
-
-    # init LatestModel
-    l_model = LatestModel()
-    
-    learn_task = asyncio.create_task(
-        fetchnlearn(client, ml_model_conf, l_model)
-    )
-    push_task = asyncio.create_task(
-        pushtodb(client, ml_model_conf, l_model)
-    )
-    
     try:
-        await asyncio.gather(learn_task, push_task)
+        learn_process = multiprocessing.Process(target=fetchnlearn, args=(influx_config,ml_model_conf),daemon=True)
+        push_process = multiprocessing.Process(target=pushtodb, args=(influx_config,ml_model_conf),daemon=True)
+
+        learn_process.start()
+        push_process.start()
+
+        learn_process.join()
+        push_process.join()
+
     except KeyboardInterrupt:
-        # Cancel the server tasks if the main thread is interrupted
-        learn_task.cancel()
-        push_task.cancel()
-        try:
-            # Wait for the tasks to finish or raise the CancelledError
-            await asyncio.gather(learn_task, push_task, return_exceptions=True)
-        except asyncio.CancelledError:
-            pass
+        logger.info("Caught KeyboardInterrupt, terminating workers")
+        learn_process.terminate()
+        push_process.terminate()
+    else:
+        logger.info("Termination")
+        learn_process.terminate()
+        push_process.terminate()
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        # Handle KeyboardInterrupt outside of asyncio.run
-        pass
+    main()
