@@ -1,4 +1,4 @@
-import asyncio, json, os, sys
+import asyncio, json, os, sys, threading
 from loguru import logger
 from datetime import datetime, timedelta
 import pandas as pd
@@ -152,7 +152,7 @@ async def pushtodb(client : InfluxClient, ml_model_conf : dict, l_model : Latest
                 'logprob': logprob, 
                 'cdf': cdf,
                 'ccdf' : 1.0-cdf,
-                'logccdf' : np.log10(1.0-cdf)
+                #'logccdf' : np.log10(1.0-cdf)
             })
             logger.debug(f"prediction result:\n{res_df}")
             client.push_dataframe(res_df, write_point_name)
@@ -160,7 +160,7 @@ async def pushtodb(client : InfluxClient, ml_model_conf : dict, l_model : Latest
     except asyncio.CancelledError:
         pass
     finally:
-        logger.warning(f"[live learning server] Stopping fetch and learn task")
+        logger.warning(f"[push to db server] Stopping push to db task")
 
 async def main():
 
