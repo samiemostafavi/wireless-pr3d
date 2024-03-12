@@ -15,12 +15,28 @@ logger.add(sys.stderr, level="INFO")
 # main conf path
 CONF_PATH = 'conf.json'
 
-async def fetchnlearn(client : InfluxClient, ml_model_conf : dict):
+class LatestModel:
+    def __init__(self):
+        self._model = None
+        self._mean = None
+        self.lock = threading.Lock()
+
+    def set(self, model, mean):
+        with self.lock:
+            self._model = model
+            self._mean = mean
+
+    def get(self):
+        with self.lock:
+            return self._model, self._mean
+            
+
+async def fetchnlearn(client : InfluxClient, ml_model_conf : dict, l_model : LatestModel):
 
     try:
         while True:
 
-            await asyncio.sleep(float(ml_model_conf["sleep_dur"]))
+            await asyncio.sleep(float(ml_model_conf["sleep_dur_learn"]))
 
             # fetch data
             if "dataset_dur" in ml_model_conf:
@@ -94,6 +110,31 @@ async def fetchnlearn(client : InfluxClient, ml_model_conf : dict):
                     epochs=round_params["epochs"],
                     verbose=0,
                 )
+
+            # save the model for push
+            l_model.set(model, key_mean)
+
+    except asyncio.CancelledError:
+        pass
+    finally:
+        logger.warning(f"[live learning server] Stopping fetch and learn task")
+
+
+async def pushtodb(client : InfluxClient, ml_model_conf : dict, l_model : LatestModel):
+
+    try:
+        while True:
+
+            await asyncio.sleep(float(ml_model_conf["sleep_dur_dbpush"]))
+
+            y_points = ml_model_conf["y_points"]
+            write_point_name = ml_model_conf["write_point_name"]
+            key_scale = np.float64(ml_model_conf["scale"])
+
+            # get the trained model if available
+            model, key_mean = l_model.get()
+            if not model:
+                continue
             
             # make predictions and push them to the database
             y_points_standard = np.linspace(
@@ -121,7 +162,6 @@ async def fetchnlearn(client : InfluxClient, ml_model_conf : dict):
     finally:
         logger.warning(f"[live learning server] Stopping fetch and learn task")
 
-
 async def main():
 
     # get standalone env variable
@@ -145,10 +185,27 @@ async def main():
     # connect to influxDB
     client = InfluxClient(influx_config["url"], influx_config["token"], influx_config["bucket"], influx_config["org"], influx_config["read_point_name"])
 
-    task = asyncio.create_task(
-        fetchnlearn(client, ml_model_conf)
+    # init LatestModel
+    l_model = LatestModel()
+    
+    learn_task = asyncio.create_task(
+        fetchnlearn(client, ml_model_conf, l_model)
     )
-    await asyncio.gather(task)
+    push_task = asyncio.create_task(
+        pushtodb(client, ml_model_conf, l_model)
+    )
+    
+    try:
+        await asyncio.gather(learn_task, push_task)
+    except KeyboardInterrupt:
+        # Cancel the server tasks if the main thread is interrupted
+        learn_task.cancel()
+        push_task.cancel()
+        try:
+            # Wait for the tasks to finish or raise the CancelledError
+            await asyncio.gather(learn_task, push_task, return_exceptions=True)
+        except asyncio.CancelledError:
+            pass
 
 
 if __name__ == "__main__":
