@@ -21,11 +21,13 @@ CONF_PATH = 'conf.json'
 MODEL_JSON = '.model.json'
 MODEL_H5 = '.model.h5'
 
-# create files if dont exist
-if not os.path.exists(MODEL_H5):
-    os.mknod(MODEL_H5)
-if not os.path.exists(MODEL_JSON):
-    os.mknod(MODEL_JSON)
+# delete the old files and create new ones
+if os.path.exists(MODEL_H5):
+    os.remove(MODEL_H5)
+if os.path.exists(MODEL_JSON):
+    os.remove(MODEL_JSON)
+os.mknod(MODEL_H5)
+os.mknod(MODEL_JSON)
 
 def fetchnlearn(influx_config : dict, ml_model_conf : dict):
     from api.influx import InfluxClient
