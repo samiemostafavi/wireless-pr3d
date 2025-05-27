@@ -29,7 +29,7 @@ if os.path.exists(MODEL_JSON):
 os.mknod(MODEL_H5)
 os.mknod(MODEL_JSON)
 
-def fetchnlearn(influx_config : dict, ml_model_conf : dict):
+def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : dict):
     from api.influx import InfluxClient
     import tensorflow as tf
     from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
@@ -37,32 +37,31 @@ def fetchnlearn(influx_config : dict, ml_model_conf : dict):
     logger.info("Strating fetch and learn thread")
     
     # connect to influxDB
-    client = InfluxClient(influx_config["url"], influx_config["token"], influx_config["bucket"], influx_config["org"], influx_config["read_point_name"])
+    client = InfluxClient(influx_config["url"], influx_config["token"], influx_read_conf["bucket"], influx_config["org"], influx_read_conf["read_point_name"])
     
     try:
         while True:
 
             # fetch data
+            y_label = influx_read_conf["y_label"]
             if "dataset_dur" in ml_model_conf:
-                df_train = client.get_recent_samples_dur(timedelta(minutes=ml_model_conf["dataset_dur"]["minutes"],seconds=ml_model_conf["dataset_dur"]["seconds"]))
+                df_train = client.get_recent_samples_dur(timedelta(minutes=ml_model_conf["dataset_dur"]["minutes"],seconds=ml_model_conf["dataset_dur"]["seconds"]),field=y_label)
             else:
                 df_train = client.get_latest_samples_num(ml_model_conf["training_params"]["dataset_size"])
             if len(df_train) < ml_model_conf["training_params"]["dataset_size"]:
                 logger.warning(f'Requested number of samples: {ml_model_conf["training_params"]["dataset_size"]}, received: {len(df_train)}')
                 continue
-
+            
+            logger.info(f"Number of training samples: {len(df_train)}")
             # shuffle the data
             df_train.sample(replace=True, frac=1)
 
             # get training parameters
             training_params = ml_model_conf["training_params"]
-            y_label = ml_model_conf["y_label"]
             model_type = ml_model_conf["type"]
             training_rounds = training_params["rounds"]
             batch_size = training_params["batch_size"]
             key_scale = np.float64(ml_model_conf["scale"])
-            y_points = ml_model_conf["y_points"]
-            write_point_name = ml_model_conf["write_point_name"]
             strdtype = "float64"
 
             # dataset pre process
@@ -130,7 +129,7 @@ def fetchnlearn(influx_config : dict, ml_model_conf : dict):
         logger.warning(f"[live learning server] Stopping fetch and learn task")
 
 
-def pushtodb(influx_config : dict, ml_model_conf : dict):
+def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : dict):
     from api.influx import InfluxClient
     import tensorflow as tf
     from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
@@ -138,10 +137,10 @@ def pushtodb(influx_config : dict, ml_model_conf : dict):
     logger.info("Strating push to db thread")
 
     # connect to influxDB
-    client = InfluxClient(influx_config["url"], influx_config["token"], influx_config["bucket"], influx_config["org"], influx_config["read_point_name"])
+    client = InfluxClient(influx_config["url"], influx_config["token"], influx_write_config["bucket"], influx_config["org"], influx_write_config["write_point_name"])
 
-    y_points = ml_model_conf["y_points"]
-    write_point_name = ml_model_conf["write_point_name"]
+    y_points = influx_write_config["y_points"]
+    write_point_name = influx_write_config["write_point_name"]
 
     try:
         while True:
@@ -166,23 +165,30 @@ def pushtodb(influx_config : dict, ml_model_conf : dict):
                 continue
 
             # make predictions and push them to the database
-            y_points_standard = np.linspace(
-                start=y_points[0], #*key_scale-(key_mean*key_scale)
-                stop=y_points[1], #*key_scale-(key_mean*key_scale)
+            y = np.linspace(
+                start=y_points[0],
+                stop=y_points[1],
+                num=y_points[2]
+            )
+            y = np.array(y, dtype=np.float64)
+            y_std = np.linspace(
+                start=y_points[0]*key_scale-(key_mean*key_scale),
+                stop=y_points[1]*key_scale-(key_mean*key_scale),
                 num=y_points[2],
             )
             # define y numpy list
-            y = np.array(y_points_standard, dtype=np.float64)
+            y_std = np.array(y_std, dtype=np.float64)
             #y = y.clip(min=0.00)
-            prob, logprob, cdf = model.prob_batch(y)
-            res_df = pd.DataFrame({ 
-                'y': y+(key_mean*key_scale), 
+            prob, logprob, cdf = model.prob_batch(y_std)
+            res_df = pd.DataFrame({
+                'y': y, 
                 'prob': prob, 
                 'logprob': logprob, 
                 'cdf': cdf,
                 'ccdf' : 1.0-cdf,
                 'logccdf' : np.log10(1.0-cdf)
             })
+            #print(res_df)
             logger.debug(f"prediction result:\n{res_df}")
             client.push_dataframe(res_df, write_point_name)
             logger.info(f"Pushed a model to db")
@@ -192,7 +198,7 @@ def pushtodb(influx_config : dict, ml_model_conf : dict):
     except Exception as e:
         logger.error(traceback.format_exc())
     finally:
-        logger.warning(f"[live learning server] Stopping fetch and learn task")
+        logger.warning(f"[live learning server] Stopping push to db thread")
 
 def main():
 
@@ -213,10 +219,12 @@ def main():
     )
     ml_model_conf = config["ml_model"]
     influx_config = config["influxdb"]
+    influx_read_config = config["influxdb-read"]
+    influx_write_config = config["influxdb-write"]
 
     try:
-        learn_process = multiprocessing.Process(target=fetchnlearn, args=(influx_config,ml_model_conf),daemon=True)
-        push_process = multiprocessing.Process(target=pushtodb, args=(influx_config,ml_model_conf),daemon=True)
+        learn_process = multiprocessing.Process(target=fetchnlearn, args=(influx_config,influx_read_config,ml_model_conf),daemon=True)
+        push_process = multiprocessing.Process(target=pushtodb, args=(influx_config,influx_write_config,ml_model_conf),daemon=True)
 
         learn_process.start()
         push_process.start()

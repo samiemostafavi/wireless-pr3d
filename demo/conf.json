@@ -1,14 +1,22 @@
 {
 	"influxdb": {
-		"url" : "http://localhost:8086",
-		"token" : "jZHmjPtn9Q-Z0U8j0wxdo7ATKKHD0ofOMNqfkXvbB-hbnHahU2NDXLh0DHOZ-Kd_Ncwtixh2xdNJncFKm42Pmg==",
-		"org" : "expeca",
-		"bucket" : "latency",
-		"read_point_name" : "packet_records"
+		"url" : "http://130.237.11.115:8086",
+		"token" : "d1VbGWWAVtfX1Ajovah7y8BKt7q4MZgFFh22ZiLFmStCnVfIq5PtKyqxecO-KX6Fqd0W2vvnONgK5TaogDxtxw==",
+		"org" : "expeca"
+	},
+	"influxdb-read": {
+		"bucket" : "edaf_main",
+		"read_point_name" : "packet_decomposed",
+	    	"y_label" : "app.e2e_delay"
+	},
+	"influxdb-write": {
+		"bucket" : "pr3d",
+	    	"y_points": [0,200,400],
+	    	"write_point_name" : "predictions"
 	},
 	"ml_model": {
 	    "dataset_dur": {
-                "minutes": 10,
+                "minutes": 40,
                 "seconds": 0
             },
 	    "sleep_dur_learn": 1.0,
@@ -17,11 +25,8 @@
 	    "bayesian": false,
 	    "scale":1,
 	    "centers": 4,
-	    "y_points": [0,20,40],
 	    "hidden_sizes" : [],
 	    "condition_labels" : [],
-	    "y_label" : "e2e_delay",
-	    "write_point_name" : "predictions",
 	    "training_params": {
 		"dataset_size": 5000,
 		"batch_size": 2500,
