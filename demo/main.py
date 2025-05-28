@@ -61,14 +61,13 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
             model_type = ml_model_conf["type"]
             training_rounds = training_params["rounds"]
             batch_size = training_params["batch_size"]
-            key_scale = np.float64(ml_model_conf["scale"])
             strdtype = "float64"
 
             # dataset pre process
-            df_train = df_train[[y_label]]
-            df_train["y_input"] = df_train[y_label].apply(lambda x:x*key_scale)
-            key_mean = df_train[y_label].mean()
-            logger.debug(f"Key mean: {key_mean}")
+            offset = df_train[y_label].mean()
+            scale  = df_train[y_label].std(ddof=0)
+            df_train["y_input"] = (df_train[y_label] - offset) / scale    # z-scores
+            logger.info(f"Offset: {offset}, scale: {scale}")
 
             # initiate the non conditional predictor
             if model_type == "gmm":
@@ -115,7 +114,7 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
                 )
 
             # training done, save the model
-            model_conf = {"key_mean":key_mean, "type":model_type, "key_scale":key_scale}
+            model_conf = {"key_mean":offset, "type":model_type, "key_scale":scale}
             model.save(MODEL_H5)
             with open(MODEL_JSON, "w") as write_file:
                 json.dump(model_conf, write_file, indent=4)
@@ -141,6 +140,7 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
 
     y_points = influx_write_config["y_points"]
     write_point_name = influx_write_config["write_point_name"]
+    quantiles = np.array(influx_write_config["quantiles"])
 
     try:
         while True:
@@ -148,8 +148,8 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
             with open(MODEL_JSON, 'r') as f:
                 try:
                     info_dict = json.load(f)
-                    key_mean = float(info_dict["key_mean"])
-                    key_scale = float(info_dict["key_scale"])
+                    offset = float(info_dict["key_mean"])
+                    scale = float(info_dict["key_scale"])
                     model_type = info_dict["type"]
                     if model_type == "gmm":
                         model = GaussianMM(h5_addr=MODEL_H5)
@@ -171,15 +171,12 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
                 num=y_points[2]
             )
             y = np.array(y, dtype=np.float64)
-            y_std = np.linspace(
-                start=y_points[0]*key_scale-(key_mean*key_scale),
-                stop=y_points[1]*key_scale-(key_mean*key_scale),
-                num=y_points[2],
-            )
+            y_transformed = (y - offset) / scale
             # define y numpy list
-            y_std = np.array(y_std, dtype=np.float64)
+            y_transformed = np.array(y_transformed, dtype=np.float64)
             #y = y.clip(min=0.00)
-            prob, logprob, cdf = model.prob_batch(y_std)
+            prob, logprob, cdf = model.prob_batch(y_transformed)
+            logccdf = np.log10(1.0-cdf)
             res_df = pd.DataFrame({
                 'y': y, 
                 'prob': prob, 
@@ -189,9 +186,25 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
                 'logccdf' : np.log10(1.0-cdf)
             })
             #print(res_df)
-            logger.debug(f"prediction result:\n{res_df}")
-            client.push_dataframe(res_df, write_point_name)
-            logger.info(f"Pushed a model to db")
+            logger.debug(f"prediction probability result:\n{res_df}")
+            client.push_dataframe(res_df, write_point_name + "_probs")
+
+            # find quantiles
+            # quantiles = [0.9, 0.99, 0.999, 0.9999]
+            logcquat = np.log10(1.0 - quantiles) # will be [-1 , -2, -3, -4]
+            logccdf = np.log10(1.0-cdf)
+
+            # Find indices of closest logccdf values to each logcquat
+            indices = [np.abs(logccdf - val).argmin() for val in logcquat]
+            y_quantiles = [y[i] for i in indices]
+            res_df = pd.DataFrame({
+                'y': y_quantiles,
+                'quantile': quantiles
+            })
+            logger.debug(f"prediction quantile result:\n{res_df}")
+            client.push_dataframe(res_df, write_point_name + "_quants")
+
+            logger.info(f"Pushed predictions to db")
 
             time.sleep(float(ml_model_conf["sleep_dur_dbpush"]))
 
