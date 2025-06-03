@@ -13,18 +13,18 @@
 		"bucket" : "pr3d",
 	    	"y_points": [0,200,400],
 		"quantiles" : [0.9, 0.99, 0.999, 0.9999, 0.99999],
-	    	"write_point_name" : "predictions"
+	    	"write_point_name" : "predictions_gmevm_30m"
 	},
 	"ml_model": {
-	    "model_json_file": ".model.json",
-	    "model_h5_file": ".model.h5",
+	    "model_json_file": ".gmevm_30m_model.json",
+	    "model_h5_file": ".gmevm_30m_model.h5",
 	    "dataset_dur": {
-                "minutes": 120,
+                "minutes": 30,
                 "seconds": 0
             },
-	    "sleep_dur_learn": 1.0,
+	    "sleep_dur_learn": 20.0,
 	    "sleep_dur_dbpush": 5.0,
-	    "type": "gmm",
+	    "type": "gmevm",
 	    "bayesian": false,
 	    "scale":1,
 	    "centers": 8,
@@ -32,12 +32,12 @@
 	    "condition_labels" : [],
 	    "training_params": {
 		"dataset_size": 5000,
-		"batch_size": 2500,
+		"batch_size": 1024,
 		"rounds" : [
-		    {"learning_rate": 1e-2, "epochs":200},
-		    {"learning_rate": 1e-3, "epochs":400},
-		    {"learning_rate": 1e-4, "epochs":400},
-		    {"learning_rate": 1e-5, "epochs":400}
+		    {"learning_rate": 1e-2, "epochs":300},
+		    {"learning_rate": 1e-3, "epochs":500},
+		    {"learning_rate": 1e-4, "epochs":500},
+		    {"learning_rate": 1e-5, "epochs":500}
 		]
 	    }
 	}

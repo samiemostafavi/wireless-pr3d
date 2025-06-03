@@ -13,16 +13,16 @@
 		"bucket" : "pr3d",
 	    	"y_points": [0,200,400],
 		"quantiles" : [0.9, 0.99, 0.999, 0.9999, 0.99999],
-	    	"write_point_name" : "predictions"
+	    	"write_point_name" : "predictions_gmm_2h"
 	},
 	"ml_model": {
-	    "model_json_file": ".model.json",
-	    "model_h5_file": ".model.h5",
+	    "model_json_file": ".gmm_2h_model.json",
+	    "model_h5_file": ".gmm_2h_model.h5",
 	    "dataset_dur": {
                 "minutes": 120,
                 "seconds": 0
             },
-	    "sleep_dur_learn": 1.0,
+	    "sleep_dur_learn": 20.0,
 	    "sleep_dur_dbpush": 5.0,
 	    "type": "gmm",
 	    "bayesian": false,

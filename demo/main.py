@@ -1,4 +1,6 @@
-import json, os, sys, threading, copy, time
+# example: python main.py --conf conf_gmm_2h.json
+
+import json, os, sys, threading, copy, time, random
 import traceback
 import multiprocessing
 import multiprocessing.context as ctx
@@ -6,7 +8,7 @@ from loguru import logger
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
-
+import argparse
 
 # very important line to make tensorflow run in sub processes
 ctx._force_start_method("spawn")
@@ -15,19 +17,6 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 logger.remove()
 logger.add(sys.stderr, level="INFO")
-
-# main conf path
-CONF_PATH = 'conf.json'
-MODEL_JSON = '.model.json'
-MODEL_H5 = '.model.h5'
-
-# delete the old files and create new ones
-if os.path.exists(MODEL_H5):
-    os.remove(MODEL_H5)
-if os.path.exists(MODEL_JSON):
-    os.remove(MODEL_JSON)
-os.mknod(MODEL_H5)
-os.mknod(MODEL_JSON)
 
 def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : dict):
     from api.influx import InfluxClient
@@ -38,6 +27,9 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
     
     # connect to influxDB
     client = InfluxClient(influx_config["url"], influx_config["token"], influx_read_conf["bucket"], influx_config["org"], influx_read_conf["read_point_name"])
+
+    MODEL_JSON = ml_model_conf['model_json_file']
+    MODEL_H5 = ml_model_conf['model_h5_file']
     
     try:
         while True:
@@ -119,7 +111,7 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
             with open(MODEL_JSON, "w") as write_file:
                 json.dump(model_conf, write_file, indent=4)
             
-            logger.info("model trained and saved")
+            logger.info(f"model trained and saved to {MODEL_H5} and {MODEL_JSON} with {model_conf}")
             time.sleep(float(ml_model_conf["sleep_dur_learn"]))
 
     except Exception as e:
@@ -142,8 +134,17 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
     write_point_name = influx_write_config["write_point_name"]
     quantiles = np.array(influx_write_config["quantiles"])
 
+    MODEL_JSON = ml_model_conf['model_json_file']
+    MODEL_H5 = ml_model_conf['model_h5_file']
+
     try:
         while True:
+            # Set seeds at start of each iteration
+            os.environ["TF_DETERMINISTIC_OPS"] = "1"
+            random.seed(42)
+            np.random.seed(42)
+            tf.random.set_seed(42)
+
             # get the trained model if available
             with open(MODEL_JSON, 'r') as f:
                 try:
@@ -160,7 +161,7 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
                 except:
                     model = None
             if not model:
-                logger.warning("no model available to push")
+                logger.warning("no model available to read")
                 time.sleep(float(ml_model_conf["sleep_dur_dbpush"]))
                 continue
 
@@ -176,7 +177,7 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
             y_transformed = np.array(y_transformed, dtype=np.float64)
             #y = y.clip(min=0.00)
             prob, logprob, cdf = model.prob_batch(y_transformed)
-            logccdf = np.log10(1.0-cdf)
+            logccdf = np.log10(np.clip(1.0 - cdf, 1e-15, 1.0))
             res_df = pd.DataFrame({
                 'y': y, 
                 'prob': prob, 
@@ -215,17 +216,17 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
 
 def main():
 
-    # get standalone env variable
-    config_file_path = os.environ.get("CONFIG_FILE_PATH")
-    if config_file_path is not None:
-        logger.info(f"Loading config from {config_file_path}")
-        with open(config_file_path) as json_file:
-            config = json.load(json_file)
-    else:
-        # load config from default path
-        logger.info("Loading config from default path")
-        with open(CONF_PATH) as json_file:
-            config = json.load(json_file)
+    # main conf path
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Run with custom config path")
+    parser.add_argument('--conf', type=str, default='conf.json', help='Path to configuration file')
+    args = parser.parse_args()
+    config_file_path = args.conf
+    
+    logger.info(f"Loading config from {config_file_path}")
+    with open(config_file_path) as json_file:
+        config = json.load(json_file)
+
 
     logger.info(
         f"Params: \n {config}"
@@ -234,6 +235,17 @@ def main():
     influx_config = config["influxdb"]
     influx_read_config = config["influxdb-read"]
     influx_write_config = config["influxdb-write"]
+   
+    # fix the files for the models
+    MODEL_JSON = ml_model_conf['model_json_file']
+    MODEL_H5 = ml_model_conf['model_h5_file']
+    # delete the old files and create new ones
+    if os.path.exists(MODEL_H5):
+        os.remove(MODEL_H5)
+    if os.path.exists(MODEL_JSON):
+        os.remove(MODEL_JSON)
+    os.mknod(MODEL_H5)
+    os.mknod(MODEL_JSON)
 
     try:
         learn_process = multiprocessing.Process(target=fetchnlearn, args=(influx_config,influx_read_config,ml_model_conf),daemon=True)
