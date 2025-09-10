@@ -21,7 +21,7 @@ logger.add(sys.stderr, level="INFO")
 def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : dict):
     from api.influx import InfluxClient
     import tensorflow as tf
-    from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
+    from pr3d.de import GaussianMM, AppendixEVM
 
     logger.info("Strating fetch and learn thread")
     
@@ -55,6 +55,10 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
             batch_size = training_params["batch_size"]
             strdtype = "float64"
 
+            if model_type == "evm":
+                evm_training_rounds = training_params["evm_rounds"]
+                evm_batch_size = training_params["evm_batch_size"]
+
             # dataset pre process
             offset = df_train[y_label].mean()
             scale  = df_train[y_label].std(ddof=0)
@@ -62,18 +66,11 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
             logger.info(f"Offset: {offset}, scale: {scale}")
 
             # initiate the non conditional predictor
-            if model_type == "gmm":
-                model = GaussianMM(
-                    centers=ml_model_conf["centers"],
-                    dtype=strdtype,
-                    bayesian=ml_model_conf["bayesian"]
-                )
-            elif model_type == "gmevm":
-                model = GaussianMixtureEVM(
-                    centers=ml_model_conf["centers"],
-                    dtype=strdtype,
-                    bayesian=ml_model_conf["bayesian"]
-                )
+            model = GaussianMM(
+                centers=ml_model_conf["centers"],
+                dtype=strdtype,
+                bayesian=ml_model_conf["bayesian"]
+            )
 
             X = None
             Y = df_train.y_input
@@ -105,7 +102,43 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
                     verbose=0,
                 )
 
-            # training done, save the model
+            # training done, do another round if EVM
+            if model_type == "evm":
+                evm_model = AppendixEVM(
+                    bulk_params = model.get_parameters(),
+                    dtype=strdtype,
+                    bayesian=ml_model_conf["bayesian"]
+                )
+
+                steps_per_epoch = len(df_train) // evm_batch_size
+
+                for idx, round_params in enumerate(evm_training_rounds):
+
+                    logger.info(
+                        "EVM Training session "
+                        + f"{idx+1}/{len(evm_training_rounds)} with {round_params}, "
+                        + f"steps_per_epoch: {steps_per_epoch}, batch size: {evm_batch_size}"
+                    )
+
+                    evm_model.training_model.compile(
+                        optimizer=tf.keras.optimizers.Adam(
+                            learning_rate=round_params["learning_rate"],
+                        ),
+                        loss=evm_model.loss,
+                    )
+
+                    Xnp = np.zeros(len(Y))
+                    Ynp = np.array(Y)
+                    evm_model.training_model.fit(
+                        x=[Xnp, Ynp],
+                        y=Ynp,
+                        steps_per_epoch=steps_per_epoch,
+                        epochs=round_params["epochs"],
+                        verbose=0,
+                    )
+                model = evm_model
+            
+            # save the model
             model_conf = {"key_mean":offset, "type":model_type, "key_scale":scale}
             model.save(MODEL_H5)
             with open(MODEL_JSON, "w") as write_file:
@@ -123,7 +156,7 @@ def fetchnlearn(influx_config : dict, influx_read_conf: dict, ml_model_conf : di
 def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : dict):
     from api.influx import InfluxClient
     import tensorflow as tf
-    from pr3d.de import GaussianMM, GaussianMixtureEVM, GammaMixtureEVM
+    from pr3d.de import GaussianMM, AppendixEVM
 
     logger.info("Strating push to db thread")
 
@@ -154,8 +187,8 @@ def pushtodb(influx_config : dict, influx_write_config : dict, ml_model_conf : d
                     model_type = info_dict["type"]
                     if model_type == "gmm":
                         model = GaussianMM(h5_addr=MODEL_H5)
-                    elif model_type == "gmevm":
-                        model = GaussianMixtureEVM(h5_addr=MODEL_H5)
+                    elif model_type == "evm":
+                        model = AppendixEVM(h5_addr=MODEL_H5)
                     else:
                         model = None
                 except:

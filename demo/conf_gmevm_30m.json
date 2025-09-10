@@ -1,7 +1,7 @@
 {
 	"influxdb": {
-		"url" : "http://130.237.11.115:8086",
-		"token" : "d1VbGWWAVtfX1Ajovah7y8BKt7q4MZgFFh22ZiLFmStCnVfIq5PtKyqxecO-KX6Fqd0W2vvnONgK5TaogDxtxw==",
+		"url" : "http://130.237.11.114:8086",
+		"token" : "KbzK2RJ_zrLAh_VpFlRl9kTXKHpLgYwIc-0ortchzqwHkDscvJmbJAtQTaE-TXoDGh-OKsF4xaNcWszJ5E9ABw==",
 		"org" : "expeca"
 	},
 	"influxdb-read": {
@@ -24,7 +24,7 @@
             },
 	    "sleep_dur_learn": 20.0,
 	    "sleep_dur_dbpush": 5.0,
-	    "type": "gmevm",
+	    "type": "evm",
 	    "bayesian": false,
 	    "scale":1,
 	    "centers": 8,
@@ -32,12 +32,15 @@
 	    "condition_labels" : [],
 	    "training_params": {
 		"dataset_size": 5000,
-		"batch_size": 1024,
+		"batch_size": 512,
 		"rounds" : [
 		    {"learning_rate": 1e-2, "epochs":300},
 		    {"learning_rate": 1e-3, "epochs":500},
-		    {"learning_rate": 1e-4, "epochs":500},
-		    {"learning_rate": 1e-5, "epochs":500}
+		    {"learning_rate": 1e-4, "epochs":500}
+		],
+		"evm_batch_size": 1024,
+		"evm_rounds" : [
+		    {"learning_rate": 1e-3, "epochs":500}
 		]
 	    }
 	}
